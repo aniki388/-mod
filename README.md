@@ -43,7 +43,7 @@
 
 ```bash
 # 克隆项目
-git clone https://github.com/aniki388/sgsmod
+git clone https://github.com/aniki388/sgsmod.git
 cd sgsmod
 
 # 构建
