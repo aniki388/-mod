@@ -1,0 +1,141 @@
+{
+  "sha_entity.hit1": {
+    "subtitle" : "sounds.sgsmod.sha_entity.hit",
+    "sounds" : [
+      "sgsmod:sha_entity.hit1"
+    ]
+  },
+  "sha_entity.hit2": {
+    "subtitle" : "sounds.sgsmod.sha_entity.hit",
+    "sounds" : [
+      "sgsmod:sha_entity.hit2"
+    ]
+  },
+  "sha_entity.throw": {
+    "subtitle" : "sounds.sgsmod.sha_entity.throw",
+    "sounds" : [
+      "sgsmod:sha_entity.throw"
+    ]
+  },
+  "shan": {
+    "subtitle" : "sounds.sgsmod.shan",
+    "sounds" : [
+      "sgsmod:shan"
+    ]
+  },
+  "tao_heal": {
+    "subtitle" : "sounds.sgsmod.tao_heal",
+    "sounds" : [
+      "sgsmod:tao_heal"
+    ]
+  },
+  "jiu_drink": {
+    "subtitle" : "sounds.sgsmod.jiu_drink",
+    "sounds" : [
+      "sgsmod:jiu_drink"
+    ]
+  },
+  "wuzhong": {
+    "subtitle" : "sounds.sgsmod.wuzhong",
+    "sounds" : [
+      "sgsmod:wuzhong"
+    ]
+  },
+  "wuxie": {
+    "subtitle" : "sounds.sgsmod.wuxie",
+    "sounds" : [
+      "sgsmod:wuxie"
+    ]
+  },
+  "shunshou" : {
+    "subtitle" : "sounds.sgsmod.shunshou",
+    "sounds" : [
+      "sgsmod:shunshou"
+    ]
+  },
+  "chaiqiao" : {
+    "subtitle" : "sounds.sgsmod.chaiqiao",
+    "sounds" : [
+      "sgsmod:chaiqiao"
+    ]
+  },
+  "mad": {
+    "subtitle" : "sounds.sgsmod.mad",
+    "sounds" : [
+      "sgsmod:mad"
+    ]
+  },
+  "wushuang": {
+    "subtitle" : "sounds.sgsmod.wushuang",
+    "sounds" : [
+      "sgsmod:wushuang"
+    ]
+  },
+  "losehealth": {
+    "subtitle" : "sounds.sgsmod.losehealth",
+    "sounds" : [
+      "sgsmod:losehealth"
+    ]
+  },
+
+  "wushuang_1": {
+    "subtitle" : "sounds.sgsmod.wushuang_1",
+    "sounds" : [
+      "sgsmod:wushuang_1"
+    ]
+  },
+  "wushuang_2": {
+    "subtitle" : "sounds.sgsmod.wushuang_2",
+    "sounds" : [
+      "sgsmod:wushuang_2"
+    ]
+  },
+  "jieliegong_1" : {
+    "subtitle" : "sounds.sgsmod.jieliegong_1",
+    "sounds" : [
+      "sgsmod:jieliegong_1"
+    ]
+  },
+  "jieliegong_2" : {
+    "subtitle" : "sounds.sgsmod.jieliegong_2",
+    "sounds" : [
+      "sgsmod:jieliegong_2"
+    ]
+  },
+  "kuanggu_1" : {
+    "subtitle" : "sounds.sgsmod.kuanggu_1",
+    "sounds" : [
+      "sgsmod:kuanggu_1"
+    ]
+  },
+  "kuanggu_2" : {
+    "subtitle" : "sounds.sgsmod.kuanggu_2",
+    "sounds" : [
+      "sgsmod:kuanggu_2"
+    ]
+  },
+  "zhuangshi_1": {
+    "subtitle" : "sounds.sgsmod.zhuangshi_1",
+    "sounds" : [
+      "sgsmod:zhuangshi_1"
+    ]
+  },
+  "zhuangshi_2": {
+    "subtitle" : "sounds.sgsmod.zhuangshi_2",
+    "sounds" : [
+      "sgsmod:zhuangshi_2"
+    ]
+  },
+  "kurou_1" : {
+    "subtitle" : "sounds.sgsmod.kurou_1",
+    "sounds" : [
+      "sgsmod:kurou_1"
+    ]
+  },
+  "kurou_2" : {
+    "subtitle" : "sounds.sgsmod.kurou_2",
+    "sounds" : [
+      "sgsmod:kurou_2"
+    ]
+  }
+}

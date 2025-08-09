@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "card_stack",
+  "key": {
+    "X": {
+      "tag": "minecraft:planks"
+    }
+  },
+  "pattern": [
+    " X ",
+    " X ",
+    "XXX"
+  ],
+  "result": {
+    "item": "sgsmod:card/card_stack"
+  },
+  "show_notification": true
+}
