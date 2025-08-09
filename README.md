@@ -54,6 +54,98 @@ cd sgsmod
 
 构建成功后，会在 `build/libs/` 目录下生成 `.jar` 文件，将其放入 Minecraft `mods` 文件夹即可使用。
 
+---
+
+# 锦囊牌系统说明
+
+本模块主要实现了锦囊牌的统一处理逻辑
+
+
+## 方法分类
+
+### 1. 生成型锦囊牌
+
+适用于会生成一个锦囊牌实体并加入任务队列的卡牌，例如：
+
+- 无中生有
+- 顺手牵羊
+- 过河拆桥
+- 其他类似效果的卡牌
+
+调用示例：
+
+```java
+spawnTacticCard(ModItems.WUZHONG, ModSoundEvents.WUZHONG,
+    () -> new WuZhongEntity(ModEntities.WUZHONG_ENTITY, this.getWorld()),
+    "GENERAL_WUZHONG", canResponse, "『无中生有』！");
+```
+
+方法签名：
+
+```java
+private void spawnTacticCard(Item cardItem, SoundEvent soundEvent,
+                             Supplier<TacticCardEntity> entitySupplier,
+                             String cardId, boolean canResponse, String sayText)
+```
+
+参数说明：
+
+- **cardItem**：战术牌物品
+- **soundEvent**：使用牌时播放的音效
+- **entitySupplier**：实体生成函数
+- **cardId**：战术牌唯一 ID（用于 WuXieStack 记录）
+- **canResponse**：是否可被响应（用于技能判断）
+- **sayText**：使用时的喊话文本
+
+---
+
+### 2. 响应型锦囊牌
+
+适用于不生成新实体，而是对已有战术牌进行响应的卡牌，例如：
+
+- 无懈可击
+
+调用示例：
+
+```java
+respondTacticCard(ModItems.WUXIE, ModSoundEvents.WUXIE, "使用『无懈可击』！");
+```
+
+方法签名：
+
+```java
+private void respondTacticCard(Item cardItem, SoundEvent soundEvent, String sayText)
+```
+
+参数说明：
+
+- **cardItem**：锦囊牌物品
+- **soundEvent**：使用牌时播放的音效
+- **sayText**：使用时的喊话文本
+
+---
+
+## 任务队列处理
+
+生成型锦囊牌会将实体加入 `WuXieItem.taskQueue` 队列，并调用：
+
+```java
+WuXieItem.taskQueue.offer(TacticCardEntity.scheduleTacticCardEffect(entity));
+if (WuXieItem.taskQueue.size() == 1) {
+    WuXieItem.processNextTask();
+}
+```
+
+保证任务按顺序执行。
+
+---
+
+## 优势
+
+- **高复用**：新增卡牌只需调用一行方法
+- **易维护**：通用逻辑集中在两处方法中
+- **清晰结构**：生成型 / 响应型分离，便于理解
+
 ## 贡献
 
 欢迎提交 Issue 或 Pull Request 来完善此项目。  
