@@ -110,11 +110,11 @@ public class ShaEntity extends ThrownItemEntity {
             return ModSkills.hasSkill(player, skill.name().toLowerCase());
         } else if (owner instanceof GeneralEntity general) {
             switch (skill) {
-                case Wushuang:
+                case wushuang:
                     return general.isWushuangEnabled();
-                case JieLiegong:
+                case jieliegong:
                     return general.isJieLiegongEnabled();
-                case Kuanggu:
+                case kuanggu:
                     return general.isKuangguEnabled();
                 default:
                     return false;
@@ -130,9 +130,9 @@ public class ShaEntity extends ThrownItemEntity {
 
         Entity owner = this.getOwner();
         boolean canResponse = isResponsible() ;
-        boolean isWushuang = hasSkill(owner,Skills.Wushuang);
-        boolean isJieLiegong = hasSkill(owner,Skills.JieLiegong);
-        boolean isKuanggu = hasSkill(owner,Skills.Kuanggu);
+        boolean isWushuang = hasSkill(owner,Skills.wushuang);
+        boolean isJieLiegong = hasSkill(owner,Skills.jieliegong);
+        boolean isKuanggu = hasSkill(owner,Skills.kuanggu);
 
         if (isWushuang) {
             SkillSoundManager.playSkillSound("wushuang", (LivingEntity) owner);
@@ -191,9 +191,9 @@ public class ShaEntity extends ThrownItemEntity {
     private int handleShaHitGeneral(GeneralEntity general, int totalDamage) {
         Entity owner = this.getOwner();
         boolean canResponse = isResponsible();
-        boolean isWushuang = hasSkill(owner,Skills.Wushuang);
-        boolean isJieLiegong = hasSkill(owner,Skills.JieLiegong);
-        boolean isKuanggu = hasSkill(owner,Skills.Kuanggu);
+        boolean isWushuang = hasSkill(owner,Skills.wushuang);
+        boolean isJieLiegong = hasSkill(owner,Skills.jieliegong);
+        boolean isKuanggu = hasSkill(owner,Skills.kuanggu);
         if (isWushuang) {
             SkillSoundManager.playSkillSound("wushuang", (LivingEntity) owner);
         }

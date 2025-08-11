@@ -96,6 +96,9 @@ public class GeneralEntity extends PathAwareEntity {
     /** 已救过本武将的玩家 UUID（不攻击） */
     private final Set<UUID> rescuers = new HashSet<>();
 
+    /** 敌人 UUID */
+    private final Set<UUID> enemies = new HashSet<>();
+
     /** 壮誓技能上次发动时间 */
     private long lastZhuangshiTime = 0;
 
@@ -153,8 +156,8 @@ public class GeneralEntity extends PathAwareEntity {
     public void tick() {
         super.tick();
         if (!getWorld().isClient) {
-            // 每 60 秒更新 AI
-            if (this.age % 1200 == 0) updateGeneralAI();
+            // 每 6 秒更新 AI
+            if (this.age % 120 == 0) updateGeneralAI();
             // 每 tick 执行出牌逻辑
             handleCardUsage();
         }
@@ -166,13 +169,16 @@ public class GeneralEntity extends PathAwareEntity {
     protected void updateGeneralAI() {
         if (getWorld().isClient || !isAlive()) return;
 
+        // 找最近的敌对玩家（非创造模式且没救过）
         PlayerEntity nearest = getWorld().getClosestPlayer(
                 getX(), getY(), getZ(), 16,
-                p -> p.isAlive() && !rescuers.contains(p.getUuid())
+                p -> p.isAlive()
+                        && enemies.contains(p.getUuid())
+                        && !rescuers.contains(p.getUuid())
         );
 
-        if (getTarget() != null && rescuers.contains(getTarget().getUuid())) {
-            setTarget(null); // 不攻击救过自己的玩家
+        if (getTarget() != null && (!enemies.contains(getTarget().getUuid()) || rescuers.contains(getTarget().getUuid()))) {
+            setTarget(null);
         } else {
             setTarget(nearest);
         }
@@ -463,7 +469,9 @@ public class GeneralEntity extends PathAwareEntity {
 
     /** 是否准备攻击 */
     protected boolean shouldPrepareAttack() {
-        return getTarget() instanceof PlayerEntity player && player.isAlive();
+        if (!(getTarget() instanceof PlayerEntity player)) return false;
+        if (!player.isAlive() || player.isCreative()) return false;
+        return enemies.contains(player.getUuid());
     }
 
     // ===============================
@@ -473,6 +481,7 @@ public class GeneralEntity extends PathAwareEntity {
     @Override
     public boolean damage(DamageSource source, float amount) {
         if (source.getAttacker() instanceof PlayerEntity player) {
+            enemies.add(player.getUuid());
             boolean damageFromSha = source.getAttacker() instanceof ShaEntity;
             if (amount > 1.5f && !damageFromSha && tryUseShan()) {
                 playSound(ModSoundEvents.SHAN, 1.0f, 1.0f);

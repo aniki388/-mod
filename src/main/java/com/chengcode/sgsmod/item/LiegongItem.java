@@ -30,7 +30,7 @@ public class LiegongItem extends Item {
         ItemStack stack = user.getStackInHand(hand);
 
         if (!world.isClient && user instanceof ServerPlayerEntity player) {
-            ModSkills.addSkill(player, ModSkills.getSkill(Skills.JieLiegong));
+            ModSkills.addSkill(player, ModSkills.getSkill(Skills.jieliegong));
             player.sendMessage(Text.of("你获得了技能「烈弓」！"), false);
         }
 

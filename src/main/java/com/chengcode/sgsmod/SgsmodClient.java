@@ -6,13 +6,17 @@ import com.chengcode.sgsmod.entity.WeiYanEntityRenderer;
 import com.chengcode.sgsmod.gui.ModeSelectScreen;
 import com.chengcode.sgsmod.gui.SelectTargetPlayerScreen;
 import com.chengcode.sgsmod.gui.ShanPromptScreen;
+import com.chengcode.sgsmod.skill.ModSkills;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
 import com.chengcode.sgsmod.network.NetWorking;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 
 
@@ -49,5 +53,17 @@ public class SgsmodClient implements ClientModInitializer {
             });
         });
 
+        // 玩家加入服务器事件
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            ServerPlayerEntity player = handler.getPlayer();
+            ModSkills.loadPlayerSkills(player);  // 玩家连接时加载技能数据
+        });
+
+        // 服务器停止时保存数据
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                ModSkills.savePlayerSkills(player);
+            }
+        });
     }
 }

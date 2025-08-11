@@ -45,6 +45,7 @@ public class ShaCardItem extends Card {
             itemStack.decrement(1);
         }
 
+
         return TypedActionResult.success(itemStack, world.isClient());
     }
 }

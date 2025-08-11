@@ -46,7 +46,7 @@ public class SelectCardAreaScreen extends Screen {
         client.setScreen(null);
 
         // 播放效果和反馈信息
-        player.sendMessage(Text.of("你成功使用了“过河拆桥”！"), false);
+        player.sendMessage(Text.of("“过河拆桥”生效！"), false);
         targetPlayer.sendMessage(Text.of("你的卡牌被拆掉了！"));
     }
 }

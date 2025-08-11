@@ -31,7 +31,7 @@ public class WushuangItem extends Item {
         ItemStack stack = user.getStackInHand(hand);
 
         if (!world.isClient && user instanceof ServerPlayerEntity player) {
-            ModSkills.addSkill(player, ModSkills.getSkill(Skills.Wushuang));
+            ModSkills.addSkill(player, ModSkills.getSkill(Skills.wushuang));
             player.sendMessage(Text.of("你获得了技能「无双」！"), false);
         }
 

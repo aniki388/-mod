@@ -1,116 +1,101 @@
 package com.chengcode.sgsmod.skill;
 
+import com.chengcode.sgsmod.accessor.PlayerEntityAccessor;
 import com.chengcode.sgsmod.sound.SkillSoundManager;
-import com.google.gson.Gson;
-import com.google.gson.JsonIOException;
-import net.minecraft.server.MinecraftServer;
+import net.minecraft.nbt.*;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ModSkills {
     private static final Map<UUID, List<Skill>> playerSkills = new ConcurrentHashMap<>();
-    private static File skillsDataFolder;
-    private static final Gson gson = new Gson();
+    private static final String NBT_KEY = "sgsmod_skills";
 
-    // 设置技能数据文件夹
-    public static void initialize(MinecraftServer server) {
-        if (server != null) {
-            // 仅在服务器端初始化
-            File dataDirectory = server.getRunDirectory();  // 获取服务器运行目录
-            skillsDataFolder = new File(dataDirectory, "skills");
-
-            if (!skillsDataFolder.exists()) {
-                skillsDataFolder.mkdirs();  // 如果目录不存在则创建
-            }
-        }
-    }
-
-    // 保存玩家技能数据到文件
     public static void savePlayerSkills(ServerPlayerEntity player) {
-        UUID playerId = player.getUuid();
-        List<Skill> skills = playerSkills.getOrDefault(playerId, new ArrayList<>());
-        File file = new File(skillsDataFolder, playerId.toString() + ".json");
+        List<Skill> skills = playerSkills.getOrDefault(player.getUuid(), new ArrayList<>());
+        NbtList skillList = new NbtList();
 
-        SkillData skillData = new SkillData(skills);
-
-        try (FileWriter writer = new FileWriter(file)) {
-            gson.toJson(skillData, writer);
-        } catch (IOException e) {
-            e.printStackTrace();
+        for (Skill skill : skills) {
+            NbtCompound skillTag = new NbtCompound();
+            skillTag.putString("Id", skill.getId()); // 用枚举名存储
+            skillList.add(skillTag);
         }
+
+        NbtCompound playerData = ((PlayerEntityAccessor) player).sgsmod_1_20_1$getPersistentData();
+        playerData.put(NBT_KEY, skillList);
     }
 
-
-    // 加载玩家技能数据
     public static void loadPlayerSkills(ServerPlayerEntity player) {
-        UUID playerId = player.getUuid();
-        File file = new File(skillsDataFolder, playerId.toString() + ".json");
+        NbtCompound playerData = ((PlayerEntityAccessor) player).sgsmod_1_20_1$getPersistentData();
+        System.out.println("Loading skills from NBT: " + playerData);
 
-        if (file.exists()) {
-            try (FileReader reader = new FileReader(file)) {
-                SkillData skillData = gson.fromJson(reader, SkillData.class);
-                if (skillData != null) {
-                    playerSkills.put(playerId, skillData.getSkills());
-                }
-            } catch (IOException | JsonIOException e) {
-                e.printStackTrace();
+        if (playerData.contains(NBT_KEY, NbtElement.LIST_TYPE)) {
+            NbtList skillList = playerData.getList(NBT_KEY, NbtElement.COMPOUND_TYPE);
+            System.out.println("Found skill list with size: " + skillList.size());
+
+            List<Skill> skills = new ArrayList<>();
+            for (int i = 0; i < skillList.size(); i++) {
+                NbtCompound skillTag = skillList.getCompound(i);
+                String id = skillTag.getString("Id");
+                System.out.println("Loading skill: " + id);
+
+                Skill skill = getSkillById(id);
+                if (skill != null) skills.add(skill);
             }
+
+            playerSkills.put(player.getUuid(), skills);
+            System.out.println("Loaded skills: " + skills);
+        } else {
+            System.out.println("No skills found in NBT");
         }
     }
 
-
-    // 添加技能
     public static void addSkill(ServerPlayerEntity player, Skill skill) {
         playerSkills.computeIfAbsent(player.getUuid(), k -> new ArrayList<>()).add(skill);
-        SkillSoundManager.playSkillSound(skill.getName(), player);
+        SkillSoundManager.playSkillSound(skill.getId(), player);
+        savePlayerSkills(player);
     }
 
-    // 移除技能
-    public static void removeSkill(ServerPlayerEntity player, String skillName) {
+    public static void removeSkill(ServerPlayerEntity player, String id) {
         List<Skill> skills = playerSkills.get(player.getUuid());
         if (skills != null) {
-            skills.removeIf(skill -> skill.getName().equals(skillName));
+            skills.removeIf(skill -> skill.getId().equals(id));
+            savePlayerSkills(player);
         }
     }
 
-
-    // 判断玩家是否拥有某技能
-    public static boolean hasSkill(ServerPlayerEntity player, String skillName) {
+    public static boolean hasSkill(ServerPlayerEntity player, String id) {
         List<Skill> skills = playerSkills.get(player.getUuid());
         if (skills == null) return false;
-        return skills.stream().anyMatch(skill -> skill.getName().equals(skillName));
+        return skills.stream().anyMatch(skill -> skill.getId().equalsIgnoreCase(id));
     }
 
-    // 获取玩家技能列表
     public static List<Skill> getSkills(ServerPlayerEntity player) {
         return playerSkills.getOrDefault(player.getUuid(), Collections.emptyList());
     }
 
-    // 清空玩家技能
     public static void clearSkills(ServerPlayerEntity player) {
         playerSkills.remove(player.getUuid());
+        savePlayerSkills(player);
     }
 
-    // 提供静态访问的技能实例
+    public static Skill getSkillById(String id) {
+        for (Skills s : Skills.values()) {
+            if (s.name().equalsIgnoreCase(id)) {
+                return getSkill(s);
+            }
+        }
+        return null;
+    }
+
 
     public static Skill getSkill(Skills skills) {
         switch (skills) {
-            case Wushuang:
-                return new WushuangSkill();
-            case JieLiegong:
-                return new JieLiegongSkill();
-            case Kuanggu:
-                return new KuangguSkill();
-            default:
-                return null;
+            case wushuang:   return new WushuangSkill();
+            case jieliegong: return new JieLiegongSkill();
+            case kuanggu:    return new KuangguSkill();
+            default:         return null;
         }
     }
 }

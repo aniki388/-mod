@@ -26,7 +26,9 @@ public class SelectTargetPlayerScreen extends Screen {
 
     private ArrayList<LivingEntity> getTargets(PlayerEntity player) {
         ArrayList<LivingEntity> targetList = new ArrayList<>();
-        Box box = player.getBoundingBox().expand(50);
+        Box box = player.getBoundingBox().expand(
+                30000000, 30000000, 30000000
+        );
 
         // 获取玩家实体
         List<ServerPlayerEntity> players = player.getWorld().getEntitiesByType(

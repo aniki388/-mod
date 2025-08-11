@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SMS",
+    "ARA",
+    " C "
+  ],
+  "key": {
+    "M": {"item": "sgsmod:material/crossbowmagazine"},
+    "A": {"item": "sgsmod:material/crossbowarm"},
+    "C": { "item": "minecraft:crossbow" },
+    "R": { "item": "minecraft:redstone" },
+    "S": { "tag": "minecraft:planks" }
+  },
+  "result": {
+    "item": "sgsmod:equipment/zhugeliannu",
+    "count": 1
+  }
+}

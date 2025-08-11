@@ -26,6 +26,9 @@ public class ModItems {
     public static final Item WUZHONG = registerItems("card/wuzhong", new WuZhongItem(new Item.Settings()));
     public static final Item WUXIE = registerItems("card/wuxie", new WuXieItem(new Item.Settings()));
     public static final Item CHAIQIAO = registerItems("card/chaiqiao", new ChaiqiaoItem(new Item.Settings()));
+    public static final Item ZHUGELIANNU= registerItems("equipment/zhugeliannu", new ZhugeCrossbowItem(new Item.Settings()));
+    public static final Item CROSSBOWARM = registerItems("material/crossbowarm", new Item(new Item.Settings()));
+    public static final Item CROSSBOWMAGAZINE = registerItems("material/crossbowmagazine", new Item(new Item.Settings()));
     public static Item registerItems(String id, Item item) {
         return Registry.register(Registries.ITEM, RegistryKey.of(Registries.ITEM.getKey(), new Identifier(Sgsmod.MOD_ID,id)), item);
     }
