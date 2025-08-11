@@ -2,16 +2,19 @@ package com.chengcode.sgsmod.entity;
 
 import com.chengcode.sgsmod.card.WuXieItem;
 import com.chengcode.sgsmod.effect.ModEffects;
+import com.chengcode.sgsmod.entity.ai.GeneralTargetGoal;
 import com.chengcode.sgsmod.manager.CardGameManager;
 import com.chengcode.sgsmod.item.ModItems;
 import com.chengcode.sgsmod.manager.WuXieStack;
 import com.chengcode.sgsmod.sound.ModSoundEvents;
 import com.chengcode.sgsmod.sound.SkillSoundManager;
 import net.minecraft.entity.*;
+import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.SimpleInventory;
@@ -114,6 +117,21 @@ public class GeneralEntity extends PathAwareEntity {
         super(entityType, world);
         initGoals();
     }
+    @Override
+    protected void initGoals() {
+        this.goalSelector.add(0, new SwimGoal(this));
+        this.goalSelector.add(1, new MeleeAttackGoal(this, 1.0D, true));
+
+        this.goalSelector.add(2, new WanderAroundFarGoal(this, 1.0D));
+        this.goalSelector.add(3, new LookAtEntityGoal(this, PlayerEntity.class, 8.0F));
+        this.goalSelector.add(4, new LookAtEntityGoal(this, GeneralEntity.class, 8.0F));
+        this.goalSelector.add(5, new LookAroundGoal(this));
+
+
+        this.targetSelector.add(1, new RevengeGoal(this));
+        this.targetSelector.add(2, new GeneralTargetGoal(this));
+        this.targetSelector.add(2, new ActiveTargetGoal<>(this, HostileEntity.class, true));
+    }
 
     public static DefaultAttributeContainer.Builder createAttributes() {
         return PathAwareEntity.createMobAttributes()
@@ -148,41 +166,20 @@ public class GeneralEntity extends PathAwareEntity {
 
     public Set<UUID> getRescuers() { return rescuers; }
 
+    public Set<UUID> getEnemies() { return enemies; }
+
     // ===============================
     // 生命周期 & AI
     // ===============================
-
     @Override
     public void tick() {
         super.tick();
-        if (!getWorld().isClient) {
-            // 每 6 秒更新 AI
-            if (this.age % 120 == 0) updateGeneralAI();
-            // 每 tick 执行出牌逻辑
+        if (!getWorld().isClient) {;
             handleCardUsage();
         }
+
     }
 
-    /**
-     * 更新攻击目标
-     */
-    protected void updateGeneralAI() {
-        if (getWorld().isClient || !isAlive()) return;
-
-        // 找最近的敌对玩家（非创造模式且没救过）
-        PlayerEntity nearest = getWorld().getClosestPlayer(
-                getX(), getY(), getZ(), 16,
-                p -> p.isAlive()
-                        && enemies.contains(p.getUuid())
-                        && !rescuers.contains(p.getUuid())
-        );
-
-        if (getTarget() != null && (!enemies.contains(getTarget().getUuid()) || rescuers.contains(getTarget().getUuid()))) {
-            setTarget(null);
-        } else {
-            setTarget(nearest);
-        }
-    }
 
     // ===============================
     // 出牌 & 技能逻辑

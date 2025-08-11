@@ -17,7 +17,7 @@ public class ModEntities {
             new Identifier(Sgsmod.MOD_ID, "sha_entity"),
             FabricEntityTypeBuilder.<ShaEntity>create(SpawnGroup.MISC, ShaEntity::new)
                     .dimensions(EntityDimensions.fixed(0.25f, 0.25f))
-                    .trackRangeBlocks(64).trackedUpdateRate(10)
+                    .trackRangeBlocks(32).trackedUpdateRate(10)
                     .build()
     );
 
@@ -26,7 +26,7 @@ public class ModEntities {
             new Identifier(Sgsmod.MOD_ID, "wuzhong_entity"),
             FabricEntityTypeBuilder.<WuZhongEntity>create(SpawnGroup.MISC, WuZhongEntity::new)
                     .dimensions(EntityDimensions.fixed(0.25f, 0.25f))
-                    .trackRangeBlocks(64).trackedUpdateRate(10)
+                    .trackRangeBlocks(32).trackedUpdateRate(10)
                     .build()
     );
 
@@ -35,7 +35,7 @@ public class ModEntities {
             new Identifier(Sgsmod.MOD_ID, "shunshou_entity"),
             FabricEntityTypeBuilder.<ShunshouEntity>create(SpawnGroup.MISC, ShunshouEntity::new)
                     .dimensions(EntityDimensions.fixed(0.25f, 0.25f))
-                    .trackRangeBlocks(64).trackedUpdateRate(10)
+                    .trackRangeBlocks(32).trackedUpdateRate(10)
                     .build()
     );
 
@@ -44,7 +44,7 @@ public class ModEntities {
             new Identifier(Sgsmod.MOD_ID, "chaiqiao_entity"),
             FabricEntityTypeBuilder.<ChaiqiaoEntity>create(SpawnGroup.MISC, ChaiqiaoEntity::new)
                     .dimensions(EntityDimensions.fixed(0.25f, 0.25f))
-                    .trackRangeBlocks(64).trackedUpdateRate(10)
+                    .trackRangeBlocks(32).trackedUpdateRate(10)
                     .build()
     );
 
@@ -53,7 +53,6 @@ public class ModEntities {
                     LvBuEntity::new
             ).dimensions(EntityDimensions.fixed(0.75F, 1.95F))
             .trackRangeBlocks(32)
-            .trackedUpdateRate(10)
             .build();
 
     public static final EntityType<WeiYanEntity> WEIYAN = FabricEntityTypeBuilder.create(
@@ -61,7 +60,6 @@ public class ModEntities {
                     WeiYanEntity::new
             ).dimensions(EntityDimensions.fixed(0.75F, 1.95F))
             .trackRangeBlocks(32)
-            .trackedUpdateRate(10)
             .build();
 
     public static void register() {

@@ -56,33 +56,6 @@ public class Sgsmod implements ModInitializer {
 		SkillSoundManager.init();
 		ModEffects.registerEffects();
 
-//		// 在服务器启动时注册回调
-//		ServerLifecycleEvents.SERVER_STARTING.register(this::onServerStart);
-//		ServerLifecycleEvents.SERVER_STOPPING.register(server1 -> onServerStop(server1));
-//		ServerTickEvents.START_WORLD_TICK.register(this::onWorldTick);
-
-//		ModSkills.register();
 		LOGGER.info("Hello Fabric world!");
 	}
-
-//	// 服务器启动时初始化
-//	private void onServerStart(MinecraftServer server) {
-//
-//	}
-//
-//	// 保存所有玩家的技能数据
-//	public static void onServerStop(MinecraftServer server) {
-//		for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-//			savePlayerSkills(player);  // 保存每个玩家的技能
-//		}
-//	}
-//
-//	// 每个 tick 执行一次
-//	private void onWorldTick(World world) {
-//		if (world instanceof ServerWorld serverWorld) {
-//			for (ServerPlayerEntity player : serverWorld.getPlayers()) {
-//				loadPlayerSkills(player);
-//			}
-//		}
-//	}
 }

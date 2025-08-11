@@ -459,6 +459,13 @@ public class CardGameManager {
                         player.sendMessage(Text.of("你没有装备任何物品！"), false);
                         return false;
                     }
+                case "WP":
+                    // 掉物品栏
+                    if (!player.getInventory().isEmpty()) {
+                        // 随机移除
+                        ItemStack removedEquipment = player.getInventory().removeStack(RANDOM.nextInt(player.getInventory().size()-1));
+                        player.sendMessage(Text.of("你被拆了" + removedEquipment.getName().getString()), false);
+                    }
             }
         } else if (targetPlayer instanceof GeneralEntity general) {
             switch ( area)

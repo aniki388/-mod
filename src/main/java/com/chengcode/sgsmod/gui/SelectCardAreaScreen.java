@@ -36,6 +36,11 @@ public class SelectCardAreaScreen extends Screen {
         this.addDrawableChild(ButtonWidget.builder(Text.of("装备区"), button -> {
             executeCardEffect("ZB");
         }).dimensions(this.width / 2 - 100, buttonY + 60, 200, 20).build());
+
+        // 创建选择“物品栏”按钮
+        this.addDrawableChild(ButtonWidget.builder(Text.of("物品栏"), button -> {
+            executeCardEffect("WP");
+        }).dimensions(this.width / 2 - 100, buttonY + 90, 200, 20).build());
     }
 
     private void executeCardEffect(String area) {
@@ -47,6 +52,6 @@ public class SelectCardAreaScreen extends Screen {
 
         // 播放效果和反馈信息
         player.sendMessage(Text.of("“过河拆桥”生效！"), false);
-        targetPlayer.sendMessage(Text.of("你的卡牌被拆掉了！"));
+        targetPlayer.sendMessage(Text.of("被" + player.getName().getString() + "的“过河拆桥”效果命中！"));
     }
 }
