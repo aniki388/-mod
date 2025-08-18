@@ -33,8 +33,7 @@ public class KurouItem extends Item {
         if (!world.isClient && user instanceof ServerPlayerEntity player) {
             if (player.getHealth() > 5) {
                 CardGameManager.loseHealth(player, 5.0f);
-                CardGameManager.giveCard(player);
-                CardGameManager.giveCard(player);
+                CardGameManager.giveCard(player,2);
                 SkillSoundManager.playSkillSound("kurou", player);
             }else {
                 player.sendMessage(Text.of("再苦下去就要没了..."), false);

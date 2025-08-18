@@ -9,8 +9,11 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ModSkills {
+    /** 技能 */
     private static final Map<UUID, List<Skill>> playerSkills = new ConcurrentHashMap<>();
     private static final String NBT_KEY = "sgsmod_skills";
+
+    /** 手牌 */
 
     public static void savePlayerSkills(ServerPlayerEntity player) {
         List<Skill> skills = playerSkills.getOrDefault(player.getUuid(), new ArrayList<>());

@@ -2,6 +2,7 @@ package com.chengcode.sgsmod.card;
 
 import com.chengcode.sgsmod.entity.TacticCardEntity;
 import com.chengcode.sgsmod.entity.WuZhongEntity;
+import com.chengcode.sgsmod.manager.CardGameManager;
 import com.chengcode.sgsmod.manager.WuXieStack;
 import com.chengcode.sgsmod.sound.ModSoundEvents;
 import net.minecraft.entity.Entity;
@@ -32,6 +33,11 @@ public class WuXieItem extends TacticCard {
         super(settings);
     }
 
+
+    public WuXieItem(Settings settings, int suit, int number, String baseId) {
+        super(settings, suit, number,baseId);
+    }
+
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         ItemStack stack = user.getStackInHand(hand);
@@ -41,7 +47,7 @@ public class WuXieItem extends TacticCard {
             PriorityQueue<NearbyCard> nearbyCards = new PriorityQueue<>((a, b) -> Double.compare(a.distance, b.distance));
 
             // 获取当前玩家的所有实体（附近的实体）
-            List<Entity> nearbyEntities = world.getEntitiesByClass(Entity.class, player.getBoundingBox().expand(5.0), entity -> entity instanceof TacticCardEntity);
+            List<Entity> nearbyEntities = world.getEntitiesByClass(Entity.class, player.getBoundingBox().expand(16.0), entity -> entity instanceof TacticCardEntity);
 
             // 遍历玩家附近的所有实体，计算并加入堆
             for (Entity entity : nearbyEntities) {
@@ -57,7 +63,11 @@ public class WuXieItem extends TacticCard {
                 String targetCardId = nearestCard.card.getCardId();  // 获取最近锦囊的cardId
                 WuXieStack.plusWuxieCnt(targetCardId);
                 player.sendMessage(Text.literal("已触发【无懈可击】效果，请等待锦囊卡牌处理完毕！"));
-                player.playSound(ModSoundEvents.WUXIE, SoundCategory.PLAYERS, 1.0f, 1.0f);
+                world.playSound(null, user.getX(), user.getY(), user.getZ(),
+                        ModSoundEvents.WUXIE, SoundCategory.PLAYERS,
+                        1.0f, 1.0f);
+                CardGameManager.discard(stack.copy());
+                stack.decrement(1);
             }
         }
 

@@ -21,16 +21,14 @@ public class WuZhongEntity extends TacticCardEntity {
     @Override
     public void executeTacticEffect(PlayerEntity player) {
         // 无中生有锦囊效果
-        CardGameManager.giveCard(player);
-        CardGameManager.giveCard(player);
+        CardGameManager.giveCard(player,2);
         this.kill();
     }
 
     @Override
     public void executeTacticEffect(GeneralEntity general) {
         // 无中生有锦囊效果
-        CardGameManager.giveCard(general);
-        CardGameManager.giveCard(general);
+        CardGameManager.giveCard(general,2);
         this.kill();
     }
 

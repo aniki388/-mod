@@ -15,6 +15,11 @@ public class TaoItem extends Card {
         super(settings);
     }
 
+
+    public TaoItem(Settings settings, int suit, int number, String baseId) {
+        super(settings, suit, number, baseId);
+    }
+
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
         if (!world.isClient) {

@@ -1,5 +1,6 @@
 package com.chengcode.sgsmod.entity;
 
+import com.chengcode.sgsmod.card.Card;
 import com.chengcode.sgsmod.combat.AttackLevel;
 import com.chengcode.sgsmod.manager.CardGameManager;
 import com.chengcode.sgsmod.item.CombatState;
@@ -24,6 +25,7 @@ import net.minecraft.world.World;
 
 public class ShaEntity extends ThrownItemEntity {
     private boolean responsible = true;
+    private boolean isRedColor = false;
     private float bonusDamage = 0.0F;
 
     public ShaEntity(EntityType<? extends ThrownItemEntity> type, World world) {
@@ -60,28 +62,19 @@ public class ShaEntity extends ThrownItemEntity {
     private int countShanCards(ServerPlayerEntity player) {
         int count = 0;
         for (int i = 0; i < player.getInventory().size(); i++) {
-            if (player.getInventory().getStack(i).getItem() == ModItems.SHAN) {
+            if (player.getInventory().getStack(i).getItem() instanceof Card card && "shan".equals(card.getBaseId())) {
                 count++;
             }
         }
         return count;
     }
 
-    private int countCards(Entity owner) {
+    public static int countCards(Entity owner) {
         int count = 0;
         if (owner instanceof ServerPlayerEntity player) {
             for (int i = 0; i < player.getInventory().size(); i++) {
                 ItemStack stack = player.getInventory().getStack(i);
-
-                if (stack.getItem() == ModItems.SHA ||
-                        stack.getItem() == ModItems.SHAN ||
-                        stack.getItem() == ModItems.LEISHA ||
-                        stack.getItem() == ModItems.HUOSHA ||
-                        stack.getItem() == ModItems.JIU ||
-                        stack.getItem() == ModItems.TAO ||
-                        stack.getItem() == ModItems.CARD_STACK ||
-                        stack.getItem() == ModItems.WUZHONG ||
-                        stack.getItem() == ModItems.WUXIE) {
+                if (stack.getItem() instanceof Card) {
                     count += stack.getCount();
                 }
             }
@@ -89,15 +82,7 @@ public class ShaEntity extends ThrownItemEntity {
             for (int i = 0; i < general.getInventory().size(); i++) {
                 ItemStack stack = general.getInventory().getStack(i);
 
-                if (stack.getItem() == ModItems.SHA ||
-                        stack.getItem() == ModItems.SHAN ||
-                        stack.getItem() == ModItems.LEISHA ||
-                        stack.getItem() == ModItems.HUOSHA ||
-                        stack.getItem() == ModItems.JIU ||
-                        stack.getItem() == ModItems.TAO ||
-                        stack.getItem() == ModItems.CARD_STACK ||
-                        stack.getItem() == ModItems.WUZHONG ||
-                        stack.getItem() == ModItems.WUXIE) {
+                if (stack.getItem() instanceof Card) {
                     count += stack.getCount();
                 }
             }
@@ -105,20 +90,18 @@ public class ShaEntity extends ThrownItemEntity {
         return count;
     }
 
-    private boolean hasSkill(Entity owner, Skills skill) {
+    public static boolean hasSkill(Entity owner, Skills skill) {
         if (owner instanceof ServerPlayerEntity player) {
             return ModSkills.hasSkill(player, skill.name().toLowerCase());
         } else if (owner instanceof GeneralEntity general) {
-            switch (skill) {
-                case wushuang:
-                    return general.isWushuangEnabled();
-                case jieliegong:
-                    return general.isJieLiegongEnabled();
-                case kuanggu:
-                    return general.isKuangguEnabled();
-                default:
-                    return false;
-            }
+            return switch (skill) {
+                case wushuang -> general.isWushuangEnabled();
+                case jieliegong -> general.isJieLiegongEnabled();
+                case kuanggu -> general.isKuangguEnabled();
+                case jiang -> general.isJiangEnabled();
+                case yinzi -> general.isYinZiEnabled();
+                default -> false;
+            };
         }
         return false;
     }
@@ -133,10 +116,21 @@ public class ShaEntity extends ThrownItemEntity {
         boolean isWushuang = hasSkill(owner,Skills.wushuang);
         boolean isJieLiegong = hasSkill(owner,Skills.jieliegong);
         boolean isKuanggu = hasSkill(owner,Skills.kuanggu);
+        boolean isJiang = hasSkill(owner,Skills.jiang);
 
         if (isWushuang) {
             SkillSoundManager.playSkillSound("wushuang", (LivingEntity) owner);
         }
+
+        if (isRedColor)
+        {
+            if(hasSkill(target, Skills.jiang))
+            {
+                SkillSoundManager.playSkillSound("jiang", (LivingEntity) target);
+                CardGameManager.giveCard(target,1);;
+            }
+        }
+
         if (isJieLiegong) {
             SkillSoundManager.playSkillSound("jieliegong", (LivingEntity) owner);
             if (owner instanceof LivingEntity living){
@@ -177,12 +171,12 @@ public class ShaEntity extends ThrownItemEntity {
                 general.say("发动『狂骨』 恢复体力：5");
                 general.heal(5.0f);
                 general.say("获得一张牌");
-                CardGameManager.giveCard(general);
+                CardGameManager.giveCard(general,1);
             }else if (owner instanceof PlayerEntity player){
                 player.sendMessage(Text.of("发动『狂骨』 恢复体力：5"), false);
                 player.heal(5.0f);
                 player.sendMessage(Text.of("获得一张牌"), false);
-                CardGameManager.giveCard(player);
+                CardGameManager.giveCard(player,1);
             }
         }
         return totalDamage;
@@ -194,8 +188,18 @@ public class ShaEntity extends ThrownItemEntity {
         boolean isWushuang = hasSkill(owner,Skills.wushuang);
         boolean isJieLiegong = hasSkill(owner,Skills.jieliegong);
         boolean isKuanggu = hasSkill(owner,Skills.kuanggu);
+        boolean isJiang = hasSkill(owner,Skills.jiang);
         if (isWushuang) {
             SkillSoundManager.playSkillSound("wushuang", (LivingEntity) owner);
+        }
+
+        if (isRedColor)
+        {
+            if(hasSkill(general, Skills.jiang))
+            {
+                SkillSoundManager.playSkillSound("jiang", general);
+                CardGameManager.giveCard(general,1);;
+            }
         }
 
         if (isJieLiegong) {
@@ -215,16 +219,24 @@ public class ShaEntity extends ThrownItemEntity {
         }
 
 
-        int cntShan = general.getInventory().count(ModItems.SHAN);
+        int cntShan = general.findCardInInventory("shan").getCount();
         if (cntShan >= 1) {
             if (isWushuang) {
                 if (cntShan >= 2) {
-                    if (general.consumeCard(ModItems.SHAN)) {
-                        general.playSound(ModSoundEvents.SHAN, 1.0F, 1.0F);
+                    if (general.tryUseShan()) {
+                        getWorld().playSound(
+                                null, getX(), getY(), getZ(),
+                                ModSoundEvents.SHAN, SoundCategory.PLAYERS,
+                                1.0f, 1.0f
+                        );
                         totalDamage = 0;
                     }
-                    if (general.consumeCard(ModItems.SHAN)) {
-                        general.playSound(ModSoundEvents.SHAN, 1.0F, 1.0F);
+                    if (general.tryUseShan()) {
+                        getWorld().playSound(
+                                null, getX(), getY(), getZ(),
+                                ModSoundEvents.SHAN, SoundCategory.PLAYERS,
+                                1.0f, 1.0f
+                        );
                         totalDamage = 0;
                     }
                 }else if (!canResponse) {
@@ -237,8 +249,12 @@ public class ShaEntity extends ThrownItemEntity {
                 general.damage(this.getWorld().getDamageSources().thrown(this, this.getOwner()), totalDamage);
             }
             else {
-                if (general.consumeCard(ModItems.SHAN)) {
-                    general.playSound(ModSoundEvents.SHAN, 1.0F, 1.0F);
+                if (general.tryUseShan()) {
+                    getWorld().playSound(
+                            null, getX(), getY(), getZ(),
+                            ModSoundEvents.SHAN, SoundCategory.PLAYERS,
+                            1.0f, 1.0f
+                    );
                     totalDamage = 0;
                 }
             }
@@ -252,12 +268,12 @@ public class ShaEntity extends ThrownItemEntity {
                 generalEntity.say("发动『狂骨』 恢复体力：5");
                 CardGameManager.recoverHealth(generalEntity, 5.0f);
                 generalEntity.say("获得一张牌");
-                CardGameManager.giveCard(generalEntity);
+                CardGameManager.giveCard(generalEntity,1);
             }else if (owner instanceof PlayerEntity player){
                 player.sendMessage(Text.of("发动『狂骨』 恢复体力：5"), false);
                 player.sendMessage(Text.of("获得一张牌"), false);
                 CardGameManager.recoverHealth(player, 5.0f);
-                CardGameManager.giveCard(player);
+                CardGameManager.giveCard(player,1);
             }
         }
         return totalDamage;
@@ -317,5 +333,12 @@ public class ShaEntity extends ThrownItemEntity {
     }
     public void setResponsible(boolean responsible) {
         this.responsible = responsible;
+    }
+
+    public boolean isRedColor() {
+        return isRedColor;
+    }
+    public void setRedColor(boolean redColor) {
+        isRedColor = redColor;
     }
 }

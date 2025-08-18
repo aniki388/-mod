@@ -18,6 +18,10 @@ public class JiuItem extends Card {
         super(settings);
     }
 
+    public JiuItem(Settings settings, int suit, int number, String baseId) {
+        super(settings, suit, number, baseId);
+    }
+
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
         if (!world.isClient) {
@@ -33,6 +37,7 @@ public class JiuItem extends Card {
 
 
         ItemStack stack = player.getStackInHand(hand);
+        CardGameManager.discard(stack.copy());
         stack.decrement(1);
         return TypedActionResult.success(stack, world.isClient());
     }

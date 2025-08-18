@@ -12,7 +12,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 public class ModItemGroups {
-    public static final RegistryKey<ItemGroup> SGSMOD_GROUP = register("sgsmod_group");
+    public static final RegistryKey<ItemGroup> SGSMOD_GROUP1 = register("sgsmod_group1");
+    public static final RegistryKey<ItemGroup> SGSMOD_GROUP2 = register("sgsmod_group2");
 
     private static RegistryKey<ItemGroup> register(String id) {
         return RegistryKey.of(RegistryKeys.ITEM_GROUP, new Identifier(Sgsmod.MOD_ID,id));
@@ -34,9 +35,9 @@ public class ModItemGroups {
     public static void registerItemGroups() {
         Registry.register(
                 Registries.ITEM_GROUP,
-                SGSMOD_GROUP,
+                SGSMOD_GROUP1,
                 ItemGroup.create(ItemGroup.Row.TOP, 7)
-                        .displayName(Text.translatable("itemGroup.sgsmod_group"))
+                        .displayName(Text.translatable("itemGroup.sgsmod_group1"))
                         .icon(() -> new ItemStack(ModItems.SHA))
                         .entries((displaycontext, entries) -> {
                             entries.add(ModItems.SHA);
@@ -53,8 +54,27 @@ public class ModItemGroups {
                             entries.add(ModItems.WUSHUANG_ITEM);
                             entries.add(ModItems.LIEGONG_ITEM);
                             entries.add(ModItems.KUROU_ITEM);
+                            entries.add(ModItems.NANMAN);
+                            entries.add(ModItems.WANJIAN);
+                            entries.add(ModItems.TAOYUAN);
+                            entries.add(ModItems.CAMPAIGN_ITEM);
+                            entries.add(ModItems.ZHUGELIANNU);
+                            entries.add(ModItems.CROSSBOWARM);
+                            entries.add(ModItems.CROSSBOWMAGAZINE);
+                            entries.add(ModItems.LVBUHAT);
 //                            entries.add(ModItems.ICE_ETHER);
 //                            entries.add(ModItems.RAW_ICE_ETHER);
+                        })
+                        .build()
+        );
+        Registry.register(
+                Registries.ITEM_GROUP,
+                SGSMOD_GROUP2,
+                ItemGroup.create(ItemGroup.Row.TOP, 7)
+                        .displayName(Text.translatable("itemGroup.sgsmod_group2"))
+                        .icon(() -> new ItemStack(ModItems.SHA))
+                        .entries((displaycontext, entries) -> {
+                            ModItems.ALL_CARDS.forEach(entries::add);
                         })
                         .build()
         );

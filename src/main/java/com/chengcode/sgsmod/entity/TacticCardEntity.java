@@ -3,6 +3,7 @@ package com.chengcode.sgsmod.entity;
 import com.chengcode.sgsmod.card.TacticCard;
 import com.chengcode.sgsmod.manager.WuXieStack;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.thrown.ThrownItemEntity;
 import net.minecraft.item.Item;
@@ -11,8 +12,12 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.TypeFilter;
+import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -113,5 +118,47 @@ public abstract class TacticCardEntity extends ThrownItemEntity {
     }
 
     public void executeTacticEffect(GeneralEntity general) {
+    }
+
+    public static ArrayList<LivingEntity> getTargets(PlayerEntity player) {
+        Box box = player.getBoundingBox().expand(
+                30000000, 30000000, 30000000
+        );
+
+        // 获取玩家实体
+        List<ServerPlayerEntity> players = player.getWorld().getEntitiesByType(
+                TypeFilter.instanceOf(ServerPlayerEntity.class),
+                box,
+                entity -> entity != player
+        );
+        ArrayList<LivingEntity> targetList = new ArrayList<>(players);
+
+        // 添加 GeneralEntity
+        List<GeneralEntity> generals = player.getWorld().getEntitiesByType(
+                TypeFilter.instanceOf(GeneralEntity.class),
+                box,
+                entity -> true
+        );
+        targetList.addAll(generals);
+
+        return targetList;
+    }
+    public static ArrayList<LivingEntity> getTargets(GeneralEntity general) {
+        Box box = general.getBoundingBox().expand(
+                30000000, 30000000, 30000000
+        );
+        List<ServerPlayerEntity> players = general.getWorld().getEntitiesByType(
+                TypeFilter.instanceOf(ServerPlayerEntity.class),
+                box,
+                entity -> true
+        );
+        ArrayList<LivingEntity> targetList = new ArrayList<>(players);
+        List<GeneralEntity> generals = general.getWorld().getEntitiesByType(
+                TypeFilter.instanceOf(GeneralEntity.class),
+                box,
+                entity -> entity!=  general
+        );
+        targetList.addAll(generals);
+        return targetList;
     }
 }

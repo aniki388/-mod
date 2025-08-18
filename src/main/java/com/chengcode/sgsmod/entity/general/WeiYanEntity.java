@@ -1,26 +1,24 @@
-package com.chengcode.sgsmod.entity;
+package com.chengcode.sgsmod.entity.general;
 
+import com.chengcode.sgsmod.entity.GeneralEntity;
+import com.chengcode.sgsmod.item.ModItems;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.text.Text;
 import net.minecraft.world.World;
 
-public class WeiYanEntity extends GeneralEntity{
+public class WeiYanEntity extends GeneralEntity {
     public WeiYanEntity(EntityType<? extends PathAwareEntity> entityType, World world) {
         super(entityType, world);
         this.setCustomName(Text.translatable("entity.sgsmod.weiyan"));
         this.setCustomNameVisible(true);
+        setKuangguEnabled( true);
+        setZhuangshiEnabled( true);
     }
 
-    @Override
-    public boolean isZhuangshiEnabled() { return true; }
-
-    @Override
-    public boolean isKuangguEnabled() {
-        return true;
-    }
 
     public static DefaultAttributeContainer.Builder createMobAttributes() {
         return PathAwareEntity.createMobAttributes()
@@ -34,4 +32,9 @@ public class WeiYanEntity extends GeneralEntity{
         super.tick();
     }
 
+    @Override
+    protected void drop(DamageSource source) {
+        super.drop(source);
+        this.dropItem(ModItems.LIEGONG_ITEM);
+    }
 }

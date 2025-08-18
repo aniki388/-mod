@@ -1,5 +1,6 @@
-package com.chengcode.sgsmod.entity;
+package com.chengcode.sgsmod.entity.general;
 
+import com.chengcode.sgsmod.entity.GeneralEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -7,16 +8,12 @@ import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.text.Text;
 import net.minecraft.world.World;
 
-public class LvBuEntity extends GeneralEntity {
-    public LvBuEntity(EntityType<? extends PathAwareEntity> entityType, World world) {
+public class JieXushengEntity extends GeneralEntity {
+    public JieXushengEntity(EntityType<? extends PathAwareEntity> entityType, World world) {
         super(entityType, world);
-        this.setCustomName(Text.translatable("entity.sgsmod.lvbu"));
-        this.setCustomNameVisible(true);
-    }
-
-    @Override
-    public boolean isWushuangEnabled() {
-        return true;
+        setPojunEnabled( true);
+        setCustomName( Text.translatable("entity.sgsmod.jiexusheng"));
+        setCustomNameVisible( true);
     }
 
     public static DefaultAttributeContainer.Builder createMobAttributes() {
@@ -25,10 +22,4 @@ public class LvBuEntity extends GeneralEntity {
                 .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 10.0D)
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.25D);
     }
-
-    @Override
-    public void tick() {
-        super.tick();
-    }
-
 }

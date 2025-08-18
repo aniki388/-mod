@@ -3,6 +3,7 @@ package com.chengcode.sgsmod.card;
 import com.chengcode.sgsmod.entity.ModEntities;
 import com.chengcode.sgsmod.entity.TacticCardEntity;
 import com.chengcode.sgsmod.entity.WuZhongEntity;
+import com.chengcode.sgsmod.manager.CardGameManager;
 import com.chengcode.sgsmod.manager.WuXieStack;
 import com.chengcode.sgsmod.sound.ModSoundEvents;
 import net.minecraft.entity.player.PlayerEntity;
@@ -24,6 +25,11 @@ public class WuZhongItem extends TacticCard {
     }
 
 
+    public WuZhongItem(Settings settings, int suit, int number, String baseId) {
+        super(settings, suit, number,baseId);
+    }
+
+
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         super.use(world, user, hand);
@@ -38,7 +44,7 @@ public class WuZhongItem extends TacticCard {
         wuZhongEntity.setPosition(user.getX(), user.getY() + 1.0, user.getZ());
         wuZhongEntity.setVelocity(0, 0.05, 0);
         wuZhongEntity.setCardId(this.getCardId());
-        world.playSound(user, user.getX(), user.getY(), user.getZ(), ModSoundEvents.WUZHONG, SoundCategory.PLAYERS, 1.0f, 1.0f);
+        world.playSound(null, user.getX(), user.getY(), user.getZ(), ModSoundEvents.WUZHONG, SoundCategory.PLAYERS, 1.0f, 1.0f);
         user.getWorld().spawnEntity(wuZhongEntity);  // 将实体加入世界
         WuXieStack.addWuXieStack(this.getCardId(), 0);
         // 将任务加入队列并启动定时检查
@@ -48,8 +54,8 @@ public class WuZhongItem extends TacticCard {
         }
 
         // 消耗一张无中生有牌
+        CardGameManager.discard(stack.copy());
         stack.decrement(1);
-
         return TypedActionResult.success(stack, world.isClient());
     }
 

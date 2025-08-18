@@ -45,13 +45,17 @@ public class SelectCardAreaScreen extends Screen {
 
     private void executeCardEffect(String area) {
         // 处理拆卡逻辑
-        CardGameManager.removeRandomCard(targetPlayer, area);
+        boolean success = CardGameManager.removeRandomCard(targetPlayer, area);
 
         // 关闭当前界面
         client.setScreen(null);
 
         // 播放效果和反馈信息
-        player.sendMessage(Text.of("“过河拆桥”生效！"), false);
-        targetPlayer.sendMessage(Text.of("被" + player.getName().getString() + "的“过河拆桥”效果命中！"));
+        if (success) {
+            player.sendMessage(Text.of("“过河拆桥”生效！"), false);
+            targetPlayer.sendMessage(Text.of("被" + player.getName().getString() + "的“过河拆桥”效果命中！"));
+        }else {
+            player.sendMessage(Text.of("“过河拆桥”失败！"), false);
+        }
     }
 }

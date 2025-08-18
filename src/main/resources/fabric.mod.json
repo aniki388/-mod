@@ -2,13 +2,13 @@
 	"schemaVersion": 1,
 	"id": "sgsmod",
 	"version": "${version}",
-	"name": "三国杀",
-	"description": "Minecraft 三国杀 Mod —— 将三国杀玩法引入 Minecraft，由 B 站 UP 主 方溯_source 独立开发",
+	"name": "重生之我在MC打三国杀",
+	"description": "Minecraft 三国杀 Fabric Mod —— 基于 Minecraft 1.20.1 的 Fabric 平台开发，完美还原经典桌游《三国杀》玩法。支持杀、闪、桃、酒等多种卡牌及锦囊牌机制，内置丰富武将技能和 BOSS 模式，支持单人和多人联机对战，附带技能动画和音效特效，带来沉浸式策略卡牌体验。",
 	"authors": [
 		"方溯_source"
 	],
 	"contact": {
-		"homepage": "https://github.com/aniki388/",
+		"homepage": "https://space.bilibili.com/88668343",
 		"sources": "https://github.com/aniki388/sgsmod"
 	},
 	"license": "MIT",
@@ -29,7 +29,8 @@
 		"fabricloader": ">=0.16.14",
 		"minecraft": "~1.20.1",
 		"java": ">=17",
-		"fabric-api": "*"
+		"fabric-api": "*",
+		"geckolib" : "4.4.4"
 	},
 	"suggests": {
 		"another-mod": "*"

@@ -59,6 +59,48 @@
       "sgsmod:chaiqiao"
     ]
   },
+  "nanman" : {
+    "subtitle" : "sounds.sgsmod.nanman",
+    "sounds" : [
+      "sgsmod:nanman"
+    ]
+  },
+  "wanjian" : {
+    "subtitle" : "sounds.sgsmod.wanjian",
+    "sounds" : [
+      "sgsmod:wanjian"
+    ]
+  },
+  "taoyuan" : {
+    "subtitle" : "sounds.sgsmod.taoyuan",
+    "sounds" : [
+      "sgsmod:taoyuan"
+    ]
+  },
+  "jiedao" : {
+    "subtitle" : "sounds.sgsmod.jiedao",
+    "sounds" : [
+      "sgsmod:jiedao"
+    ]
+  },
+  "elephent1" : {
+    "subtitle" : "sounds.sgsmod.elephent1",
+    "sounds" : [
+      "sgsmod:elephent1"
+    ]
+  },
+  "elephent2" : {
+    "subtitle" : "sounds.sgsmod.elephent2",
+    "sounds" : [
+      "sgsmod:elephent2"
+    ]
+  },
+  "liannu" : {
+    "subtitle" : "sounds.sgsmod.liannu",
+    "sounds" : [
+      "sgsmod:liannu"
+    ]
+  },
   "mad": {
     "subtitle" : "sounds.sgsmod.mad",
     "sounds" : [
@@ -136,6 +178,78 @@
     "subtitle" : "sounds.sgsmod.kurou_2",
     "sounds" : [
       "sgsmod:kurou_2"
+    ]
+  },
+  "kurou_3" : {
+    "subtitle" : "sounds.sgsmod.kurou_3",
+    "sounds" : [
+      "sgsmod:kurou_3"
+    ]
+  },
+  "kurou_4" : {
+    "subtitle" : "sounds.sgsmod.kurou_4",
+    "sounds" : [
+      "sgsmod:kurou_4"
+    ]
+  },
+  "jiang_1": {
+    "subtitle" : "sounds.sgsmod.jiang_1",
+    "sounds" : [
+      "sgsmod:jiang_1"
+    ]
+  },
+  "jiang_2": {
+    "subtitle" : "sounds.sgsmod.jiang_2",
+    "sounds" : [
+      "sgsmod:jiang_2"
+    ]
+  },
+  "yinzi_1": {
+    "subtitle" : "sounds.sgsmod.yinzi_1",
+    "sounds" : [
+      "sgsmod:yinzi_1"
+    ]
+  },
+  "yinzi_2": {
+    "subtitle" : "sounds.sgsmod.yinzi_2",
+    "sounds" : [
+      "sgsmod:yinzi_2"
+    ]
+  },
+  "hunzi_1" : {
+    "subtitle" : "sounds.sgsmod.hunzi_1",
+    "sounds" : [
+      "sgsmod:hunzi_1"
+    ]
+  },
+  "hunzi_2" : {
+    "subtitle" : "sounds.sgsmod.hunzi_2",
+    "sounds" : [
+      "sgsmod:hunzi_2"
+    ]
+  },
+  "pojun_1": {
+    "subtitle" : "sounds.sgsmod.pojun_1",
+    "sounds" : [
+      "sgsmod:pojun_1"
+    ]
+  },
+  "pojun_2": {
+    "subtitle" : "sounds.sgsmod.pojun_2",
+    "sounds" : [
+      "sgsmod:pojun_2"
+    ]
+  },
+  "chengxiang_1": {
+    "subtitle" : "sounds.sgsmod.chengxiang_1",
+    "sounds" : [
+      "sgsmod:chengxiang_1"
+    ]
+  },
+  "chengxiang_2": {
+    "subtitle" : "sounds.sgsmod.chengxiang_2",
+    "sounds" : [
+      "sgsmod:chengxiang_2"
     ]
   }
 }

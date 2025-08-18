@@ -3,6 +3,7 @@ package com.chengcode.sgsmod.card;
 import com.chengcode.sgsmod.entity.ModEntities;
 import com.chengcode.sgsmod.entity.ShunshouEntity;
 import com.chengcode.sgsmod.entity.TacticCardEntity;
+import com.chengcode.sgsmod.manager.CardGameManager;
 import com.chengcode.sgsmod.manager.WuXieStack;
 import com.chengcode.sgsmod.sound.ModSoundEvents;
 import net.minecraft.entity.player.PlayerEntity;
@@ -16,6 +17,11 @@ public class ShunshouItem extends TacticCard{
     public ShunshouItem(Settings settings) {
         super(settings);
     }
+
+    public ShunshouItem(Settings settings, int suit, int number, String baseId) {
+        super(settings,suit,number,baseId);
+    }
+
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         ItemStack stack = user.getStackInHand(hand);
@@ -27,7 +33,9 @@ public class ShunshouItem extends TacticCard{
         shunshouEntity.setPosition(user.getX(), user.getY() + 1.0, user.getZ());
         shunshouEntity.setVelocity(0, 0.05, 0);
         shunshouEntity.setCardId(this.getCardId());
-        user.playSound(ModSoundEvents.SHUNSHOU, SoundCategory.PLAYERS, 1.0f, 1.0f);
+        world.playSound(null, user.getX(), user.getY(), user.getZ(),
+                ModSoundEvents.SHUNSHOU, SoundCategory.PLAYERS,
+                1.0f, 1.0f);
         world.spawnEntity(shunshouEntity);
         WuXieStack.addWuXieStack(this.getCardId(), 0);
         // 将任务加入队列并启动定时检查
@@ -36,6 +44,7 @@ public class ShunshouItem extends TacticCard{
             WuXieItem.processNextTask(); // 如果没有其他任务，开始处理队列中的第一个任务
         }
         // 消耗一张牌
+        CardGameManager.discard(stack.copy());
         stack.decrement(1);
         return TypedActionResult.success(stack, world.isClient());
     }

@@ -1,5 +1,6 @@
 package com.chengcode.sgsmod.network;
 
+import com.chengcode.sgsmod.card.Card;
 import com.chengcode.sgsmod.entity.GeneralEntity;
 import com.chengcode.sgsmod.manager.CardGameManager;
 import com.chengcode.sgsmod.item.ModItems;
@@ -25,7 +26,7 @@ public class ServerReceiver {
     private static boolean tryConsumeShanFromInventory(ServerPlayerEntity player) {
         for (int i = 0; i < player.getInventory().size(); i++) {
             var stack = player.getInventory().getStack(i);
-            if (stack.getItem() == ModItems.SHAN) {
+            if (stack.getItem() instanceof Card card && "shan".equals(card.getBaseId())) {
                 stack.decrement(1);
                 if (stack.isEmpty()) {
                     player.getInventory().removeStack(i);
@@ -120,18 +121,22 @@ public class ServerReceiver {
         ServerPlayNetworking.registerGlobalReceiver(NetWorking.MODE_SELECT_PACKET_ID, (server, player, handler, buf, sender) -> {
             String selectedMode = buf.readString();
             server.execute(() -> {
+                double radius = 100.0;
+                // 获得全部的在线玩家
+                List<ServerPlayerEntity> players = server.getPlayerManager().getPlayerList();
+                List<GeneralEntity> generals = server.getOverworld().getEntitiesByType(
+                        TypeFilter.instanceOf(GeneralEntity.class),
+                        new Box(player.getPos().subtract(radius, radius, radius), player.getPos().add(radius, radius, radius)),
+                        general -> true
+                );
                 if ("test".equals(selectedMode)) {
                     player.sendMessage(Text.of("进入测试模式"), false);
-                    double radius = 100.0;
-                    // 获得全部的在线玩家
-                    List<ServerPlayerEntity> players = server.getPlayerManager().getPlayerList();
-                    List<GeneralEntity> generals = server.getOverworld().getEntitiesByType(
-                            TypeFilter.instanceOf(GeneralEntity.class),
-                            new Box(player.getPos().subtract(radius, radius, radius), player.getPos().add(radius, radius, radius)),
-                            general -> true
-                    );
-                    CardGameManager.startTestMode(players,generals );
-                } else {
+                    CardGameManager.startTestMode(players,generals, server );
+                } else if ("standard".equals(selectedMode)) {
+                    player.sendMessage(Text.of("进入标准模式"), false);
+                    CardGameManager.startTestMode(players,generals, server );
+                }
+                else {
                     player.sendMessage(Text.of("该模式尚未实现: " + selectedMode), false);
                 }
             });
@@ -194,4 +199,5 @@ public class ServerReceiver {
         pendingShanTasks.put(playerId, task);
         return hasShan.get();
     }
+
 }

@@ -1,6 +1,7 @@
 package com.chengcode.sgsmod.card;
 
 import net.minecraft.client.item.TooltipContext;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -19,6 +20,7 @@ public class Card extends Item {
     private int number;  // 点数
     private int color;  // 颜色
     private String cardId;  // 卡牌的唯一标识符
+    private String baseId;  // 卡牌类型，例如 "sha", "shan" 等
 
     // 花色常量
     public static final int SPADE = 0;   // 黑桃
@@ -39,11 +41,21 @@ public class Card extends Item {
 
     public Card(Settings settings) {
         super(settings);
-        this.suit = RANDOM.nextInt(4);  // 随机花色
-        this.number = RANDOM.nextInt(13);  // 随机点数
-        this.color = (suit == HEART || suit == DIAMOND) ? RED : BLACK;  // 红色：红桃、方片，黑色：黑桃、草花
+        this.suit = NONE;
+        this.number = ACE;
+        this.color = BLACK;  // 红色：红桃、方片，黑色：黑桃、草花
         this.setCardId("Card-" + System.currentTimeMillis());  // 使用当前时间戳生成唯一ID
     }
+
+    public Card(Settings settings, int suit, int number, String baseId) {
+        super(settings);
+        this.suit = suit;
+        this.number = number;
+        this.baseId = baseId;
+        this.color = (suit == HEART || suit == DIAMOND) ? RED : BLACK;
+        this.setCardId("Card-" + System.currentTimeMillis());
+    }
+
 
     public void setSuit(int suit) {
         this.suit = suit;
@@ -115,8 +127,18 @@ public class Card extends Item {
         }
     }
 
+    @Override
+    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+        return super.use(world, user, hand);
+    }
+
     // 返回颜色的名字
     private String getColorName() {
         return color == RED ? "红色" : "黑色";
+    }
+
+
+    public String getBaseId() {
+        return baseId;
     }
 }

@@ -17,7 +17,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class PlayerEntityMixin implements PlayerEntityAccessor {
     @Unique
     private NbtCompound persistentData = new NbtCompound();
+    @Unique
+    private NbtCompound sgs$handData = new NbtCompound();
 
+    @Override
+    public NbtCompound sgs$getHandData() {
+        return sgs$handData;
+    }
+
+    @Override
+    public void sgs$setHandData(NbtCompound nbt) {
+        this.sgs$handData = nbt;
+    }
     @Inject(method = "writeCustomDataToNbt", at = @At("RETURN"))
     private void writeCustomDataToNbt(NbtCompound nbt, CallbackInfo ci) {
         nbt.put("sgsmod_persistent", persistentData);
@@ -45,6 +56,5 @@ public abstract class PlayerEntityMixin implements PlayerEntityAccessor {
             }
         }
     }
-
 }
 

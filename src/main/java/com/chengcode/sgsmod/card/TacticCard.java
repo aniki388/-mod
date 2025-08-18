@@ -18,6 +18,10 @@ public class TacticCard extends Card {
         super(settings);
     }
 
+    public TacticCard(Settings settings, int suit, int number,  String baseid) {
+        super(settings, suit, number, baseid);
+    }
+
     // 可以在这个方法中加入锦囊牌的特殊行为，比如能否被无懈可击反制
     // 设置无懈可击可响应的状态
     public void setResponse(boolean canResponse) {

@@ -41,7 +41,7 @@ public class ChaiqiaoEntity extends TacticCardEntity{
     @Override
     public void executeTacticEffect(GeneralEntity general) {
         LivingEntity target = general.getTarget();
-        if (target != null && target instanceof ServerPlayerEntity) {
+        if (target instanceof ServerPlayerEntity) {
             // 优先处理装备（如果有的话）
             if(!CardGameManager.removeRandomCard(target, "ZB"))
             {

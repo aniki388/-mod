@@ -20,6 +20,14 @@ public class ModSoundEvents {
     public static final SoundEvent LOSEHEALTH = register("losehealth");
     public static final SoundEvent SHUNSHOU = register("shunshou");
     public static final SoundEvent CHAIQIAO = register("chaiqiao");
+    public static final SoundEvent LIANNU = register("liannu");
+    public static final SoundEvent NANMAN = register("nanman");
+    public static final SoundEvent ELEPHENT1 = register("elephant1");
+    public static final SoundEvent ELEPHENT2 = register("elephant2");
+    public static final SoundEvent WANJIAN = register("wanjian");
+    public static final SoundEvent TAOYUAN = register("taoyuan");
+    public static final SoundEvent JIEDAO = register("jiedao");
+
 
     private static SoundEvent register(String name) {
         Identifier id = new Identifier(Sgsmod.MOD_ID, name);

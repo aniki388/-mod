@@ -1,6 +1,8 @@
 package com.chengcode.sgsmod.sound;
 
 import com.chengcode.sgsmod.Sgsmod;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.registry.Registry;
@@ -21,8 +23,13 @@ public class SkillSoundManager {
         registerSkill("wushuang", 2);
         registerSkill("jieliegong", 2);
         registerSkill("kuanggu", 2);
-        registerSkill("kurou",2);
+        registerSkill("kurou",4);
         registerSkill("zhuangshi",2);
+        registerSkill("jiang",2);
+        registerSkill("hunzi",2);
+        registerSkill("yinzi",2);
+        registerSkill("pojun",2);
+        registerSkill("chengxiang",2);
         // registerSkill("qice", 2);
     }
 
@@ -41,15 +48,33 @@ public class SkillSoundManager {
 
 
     public static void playSkillSound(String skillId, LivingEntity entity) {
-
         List<SoundEvent> sounds = skillSounds.get(skillId);
         if (sounds == null || sounds.isEmpty()) return;
 
         SoundEvent selected = sounds.get(RANDOM.nextInt(sounds.size()));
-        ServerWorld world = (ServerWorld) entity.getWorld();
 
-        world.playSound(null, entity.getBlockPos(), selected, SoundCategory.PLAYERS, 1.0F, 1.0F);
+        if (entity.getWorld().isClient) {
+            // 客户端播放
+            MinecraftClient.getInstance().getSoundManager().play(
+                    PositionedSoundInstance.master(
+                            selected,
+                            1.0F
+                    )
+            );
+        } else {
+            // 服务端播放（广播给玩家）
+            ServerWorld world = (ServerWorld) entity.getWorld();
+            world.playSound(
+                    null,
+                    entity.getBlockPos(),
+                    selected,
+                    SoundCategory.PLAYERS,
+                    1.0F,
+                    1.0F
+            );
+        }
     }
+
 
 
 }
