@@ -1,5 +1,6 @@
 {
   "item.sgsmod.lvbu_hat" : "lvbu_hat",
+  "item.sgsmod.handmanager" : "handInv",
   "item.sgsmod.material.cardboard" : "Cardboard",
   "item.sgsmod.campaign_item" : "Campaign Mode",
   "item.sgsmod.card.sha" : "sha",

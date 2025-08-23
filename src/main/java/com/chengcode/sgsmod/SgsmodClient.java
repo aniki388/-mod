@@ -7,6 +7,7 @@ import com.chengcode.sgsmod.entity.general.WeiYanEntity;
 import com.chengcode.sgsmod.gui.*;
 import com.chengcode.sgsmod.item.ModItems;
 import com.chengcode.sgsmod.manager.CardGameManager;
+import com.chengcode.sgsmod.manager.HandInventory;
 import com.chengcode.sgsmod.manager.HandManagementScreenHandler;
 import com.chengcode.sgsmod.model.ElephantModel;
 import com.chengcode.sgsmod.network.ClientHandCache;
@@ -21,6 +22,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ingame.HandledScreens;
 import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
 import com.chengcode.sgsmod.network.NetWorking;
+import net.minecraft.client.render.item.ItemRenderer;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -29,8 +32,12 @@ import net.minecraft.registry.Registry;
 import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerType;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
+
+import java.util.*;
 
 // 常量类：提取硬编码字符串，提高可维护性
 //class ClientConstants {
@@ -138,6 +145,104 @@ public class SgsmodClient implements ClientModInitializer {
             });
         });
 
+        ClientPlayNetworking.registerGlobalReceiver(NetWorking.TURN_ORDER_SYNC_PACKET_ID, (client, handler, buf, responseSender) -> {
+            // 在网络线程读取数据，存到列表
+            List<Integer> turnIndexes = new ArrayList<>();
+            List<Boolean> isPlayers = new ArrayList<>();
+            List<UUID> playerUUIDs = new ArrayList<>();
+            List<Integer> entityIds = new ArrayList<>();
+
+            while (buf.isReadable()) {
+                boolean isPlayer = buf.readBoolean();
+                int turnIndex = buf.readInt();
+                turnIndexes.add(turnIndex);
+                isPlayers.add(isPlayer);
+
+                if (isPlayer) {
+                    playerUUIDs.add(buf.readUuid());
+                    entityIds.add(null);
+                } else {
+                    entityIds.add(buf.readInt());
+                    playerUUIDs.add(null);
+                }
+            }
+
+            // 在主线程处理显示
+            client.execute(() -> {
+                World world = MinecraftClient.getInstance().world;
+                if (world == null) return;
+
+                Map<Integer, LivingEntity> turns = new HashMap<>();
+                for (int i = 0; i < turnIndexes.size(); i++) {
+                    int index = turnIndexes.get(i);
+                    if (isPlayers.get(i)) {
+                        UUID uuid = playerUUIDs.get(i);
+                        PlayerEntity player = world.getPlayerByUuid(uuid);
+                        if (player != null) turns.put(index, player);
+                    } else {
+                        int eid = entityIds.get(i);
+                        Entity entity = world.getEntityById(eid);
+                        if (entity instanceof GeneralEntity general) turns.put(index, general);
+                    }
+                }
+                CardGameManager.ClientTurnManager.updateTurnOrder(turns);
+                // 构建显示文本
+                StringBuilder sb = new StringBuilder("当前轮次：");
+                for (int i = 1; i <= turns.size(); i++) {
+                    LivingEntity entity = turns.get(i);
+                    if (entity instanceof PlayerEntity player) {
+                        sb.append("第").append(i).append("轮玩家：").append(player.getEntityName()).append(" ");
+                    } else if (entity instanceof GeneralEntity general) {
+                        sb.append("第").append(i).append("轮武将：")
+                                .append(Objects.requireNonNullElse(general.getCustomName(), Text.literal("未命名")).getString())
+                                .append(" ");
+                    }
+                }
+
+                // 只发送给本地玩家
+                if (MinecraftClient.getInstance().player != null) {
+                    MinecraftClient.getInstance().player.sendMessage(Text.of(sb.toString()), false);
+                }
+            });
+        });
+
+
+        ClientPlayNetworking.registerGlobalReceiver(NetWorking.OPEN_TURN_ORDER_PACKET_ID,
+                (client, handler, buf, responseSender) -> {
+                    List<UUID> playerIds = new ArrayList<>();
+                    List<Integer> generalIds = new ArrayList<>();
+
+                    int Playsize = buf.readInt();
+                    for (int i = 0; i < Playsize; i++) {
+                        playerIds.add(buf.readUuid());
+                    }
+                    int Generalsize = buf.readInt();
+                    for (int i = 0; i < Generalsize; i++) {
+                        generalIds.add(buf.readInt());
+                    }
+
+                    client.execute(() -> {
+                        List<PlayerEntity> players = new ArrayList<>();
+                        List<GeneralEntity> generals = new ArrayList<>();
+
+                        for (UUID playerId : playerIds) {
+                            if (client.world != null) {
+                                players.add(client.world.getPlayerByUuid(playerId));
+                            }
+                        }
+
+                        for (Integer generalId : generalIds) {
+                            if (client.world != null) {
+                                generals.add((GeneralEntity) client.world.getEntityById(generalId));
+                            }
+                        }
+
+                        // 打开 GUI
+                        client.setScreen(new TurnOrderScreen(players, generals));
+                    });
+                });
+
+
         // 监听"杀"响应包
         ClientPlayNetworking.registerGlobalReceiver(NetWorking.SHA_RESPONSE_PACKET, (client, handler, buf, responseSender) -> {
             int targetId = buf.readInt();
@@ -160,6 +265,7 @@ public class SgsmodClient implements ClientModInitializer {
             client.execute(() -> client.setScreen(new ModeSelectScreen()));
         });
 
+
         // 打开目标选择界面
         ClientPlayNetworking.registerGlobalReceiver(NetWorking.OPEN_SELECT_TARGET_PACKET_ID, (client, handler, buf, responseSender) -> {
             client.execute(() -> {
@@ -173,5 +279,8 @@ public class SgsmodClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(NetWorking.OPEN_CAMPAIGNS_PACKET_ID, (client, handler, buf, responseSender) -> {
             client.execute(() -> client.setScreen(new CampaignScreen()));
         });
+
+
+
     }
 }

@@ -2,20 +2,27 @@ package com.chengcode.sgsmod.network;
 
 import com.chengcode.sgsmod.card.Card;
 import com.chengcode.sgsmod.entity.GeneralEntity;
+import com.chengcode.sgsmod.gui.TurnOrderScreen;
 import com.chengcode.sgsmod.manager.CardGameManager;
-import com.chengcode.sgsmod.item.ModItems;
 import com.chengcode.sgsmod.sound.ModSoundEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.text.Text;
 import net.minecraft.util.TypeFilter;
 import net.minecraft.util.math.Box;
+import net.minecraft.world.World;
 
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class ServerReceiver {
     private static final Map<UUID, Integer> pendingDamage = new ConcurrentHashMap<>();
@@ -131,14 +138,81 @@ public class ServerReceiver {
                 );
                 if ("test".equals(selectedMode)) {
                     player.sendMessage(Text.of("进入测试模式"), false);
-                    CardGameManager.startTestMode(players,generals, server );
+                    CardGameManager.startMode(players,generals, server, "test", player);
                 } else if ("standard".equals(selectedMode)) {
+                    if (player.getWorld().isClient) {
+                        List<PlayerEntity> playerEntities = players.stream().map(p -> (PlayerEntity) p).collect(Collectors.toList());
+                        MinecraftClient.getInstance().setScreen(new TurnOrderScreen(playerEntities, generals));
+                    }
+                    else if (player instanceof ServerPlayerEntity serverPlayer) {
+                        PacketByteBuf buf2 = PacketByteBufs.create();
+                        buf2.writeInt(players.size());
+                        for (ServerPlayerEntity player2 : players) {
+                            buf2.writeUuid(player2.getUuid());
+                        }
+                        buf2.writeInt(generals.size());
+                        for (GeneralEntity general : generals) {
+                            buf2.writeInt(general.getId());
+                        }
+                        ServerPlayNetworking.send(serverPlayer, NetWorking.OPEN_TURN_ORDER_PACKET_ID, buf2);
+                    }
                     player.sendMessage(Text.of("进入标准模式"), false);
-                    CardGameManager.startTestMode(players,generals, server );
                 }
                 else {
                     player.sendMessage(Text.of("该模式尚未实现: " + selectedMode), false);
                 }
+            });
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(NetWorking.TURN_ORDER_SELECT_PACKET_ID, (server, player, handler, buf, responseSender) -> {
+            int size = buf.readInt();
+            Map<Integer, LivingEntity> turns = new HashMap<>();
+            List<String> order = new ArrayList<>();
+            for (int i = 0; i < size; i++) {
+                order.add(buf.readString(32767));
+            }
+
+            server.execute(() -> {
+                for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+                    PacketByteBuf bufToSend = PacketByteBufs.create(); // 每个玩家独立
+                    World world = p.getWorld();
+                    for (int i = 0; i < order.size(); i++) {
+                        String id = order.get(i);
+                        if (id.startsWith("P:")) {
+                            bufToSend.writeBoolean(true);
+                            bufToSend.writeInt(i + 1);
+                            turns.put(i + 1, server.getPlayerManager().getPlayer(UUID.fromString(id.substring(2))));
+                            bufToSend.writeUuid(UUID.fromString(id.substring(2)));
+                        } else if (id.startsWith("G:")) {
+                            bufToSend.writeBoolean(false);
+                            bufToSend.writeInt(i + 1);
+                            turns.put(i + 1,(GeneralEntity) world.getEntityById(Integer.parseInt(id.substring(2))));
+                            bufToSend.writeInt(Integer.parseInt(id.substring(2)));
+                        }
+                    }
+                    ServerPlayNetworking.send(p, NetWorking.TURN_ORDER_SYNC_PACKET_ID, bufToSend);
+                }
+                AtomicInteger turn = new AtomicInteger(1);
+                int turnCount = turns.size();
+                AtomicBoolean first = new AtomicBoolean(true);
+
+                scheduler.scheduleAtFixedRate(() -> {
+                    server.execute(() -> {
+                        int current = turn.get();
+                        int last = (current - 2 + turnCount) % turnCount + 1;
+                        if (!first.get()) {
+                            CardGameManager.EndTurn(last, turns.get(last));
+                        } else {
+                            first.set(false);
+                        }
+                        scheduler.schedule(() -> {
+                            server.execute(() -> {
+                                CardGameManager.StartTurn(current, turns.get(current));
+                                turn.set(current % turnCount + 1);
+                            });
+                        }, 2, TimeUnit.SECONDS);
+                    });
+                },0,60,TimeUnit.SECONDS);
             });
         });
     }

@@ -118,6 +118,35 @@ public class ModCommands {
                                         return Command.SINGLE_SUCCESS;
                                     })
                             )
+                            .then(literal("pindian")
+                                    // 指定目标玩家
+                                    .then(argument("target", StringArgumentType.word())
+                                            .executes(context -> {
+                                                ServerPlayerEntity player = context.getSource().getPlayer();
+                                                String targetName = StringArgumentType.getString(context, "target");
+                                                ServerPlayerEntity target = context.getSource().getServer().getPlayerManager().getPlayer(targetName);
+
+                                                if (target == null) {
+                                                    player.sendMessage(Text.literal("§c找不到玩家: " + targetName), false);
+                                                    return 0;
+                                                }
+
+                                                player.sendMessage(Text.literal("§e你向 " + target.getName().getString() + " 发起了拼点！"), false);
+                                                target.sendMessage(Text.literal("§e" + player.getName().getString() + " 向你发起了拼点！"), false);
+                                                return Command.SINGLE_SUCCESS;
+                                            })
+                                    )
+
+                                    // 不指定目标（默认自己）
+                                    .executes(context -> {
+                                        ServerPlayerEntity player = context.getSource().getPlayer();
+
+//                                        PinManager.startPinDian(context.getSource().getServer(), player, target);
+                                        player.sendMessage(Text.literal("§e你和自己发起了拼点（测试用）。"), false);
+
+                                        return Command.SINGLE_SUCCESS;
+                                    })
+                            )
             );
         });
     }

@@ -50,7 +50,7 @@
             int buttonHeight = 20;  // 每个按钮的高度
             int buttonSpacing = 5;  // 按钮之间的间距
 
-            if (targets.size() == 0) {
+            if (targets.isEmpty()) {
                 // 如果没有目标，显示一条提示信息
                 this.addDrawableChild(ButtonWidget.builder(Text.of("没有可选目标！"), button -> {
                             if (this.client != null) {

@@ -1,5 +1,6 @@
 package com.chengcode.sgsmod.item;
 
+import com.chengcode.sgsmod.Sgsmod;
 import com.chengcode.sgsmod.manager.*;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -32,12 +33,12 @@ public class HandManagerItem extends Item {
 
     private NamedScreenHandlerFactory createScreenHandlerFactory(ItemStack stack) {
         return new SimpleNamedScreenHandlerFactory((syncId, playerInventory, player) -> {
-            // 关键修改：传递持久化的Inventory，而非临时SimpleInventory
+            // 获取服务端持久化的手牌区
             HandInventory handInv = new HandInventory(stack);
             EquipmentInventory equipInv = new EquipmentInventory(stack);
             JudgmentInventory judgeInv = new JudgmentInventory(stack);
             DiscardInventory discardInv = new DiscardInventory(stack);
-            // 调用完整构造函数，传递所有持久化Inventory
+
             return new HandManagementScreenHandler(
                     syncId,
                     playerInventory,
@@ -45,8 +46,8 @@ public class HandManagerItem extends Item {
                     equipInv,
                     judgeInv,
                     discardInv,
-                    HAND_CAPACITY
+                    164
             );
-        }, Text.translatable("gui.sgsmod.hand_manager")); // 建议用可翻译文本，而非Item名称
+        }, Text.translatable(Sgsmod.MOD_ID,"gui.hand_manager"));
     }
 }

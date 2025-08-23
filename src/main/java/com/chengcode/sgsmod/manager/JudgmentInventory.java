@@ -8,7 +8,7 @@ import net.minecraft.util.collection.DefaultedList;
 public class JudgmentInventory implements ImplementedInventory {
     private final ItemStack stack;
     // 容量匹配MAX_JUDGMENT_SLOTS=2
-    private final DefaultedList<ItemStack> items = DefaultedList.ofSize(2, ItemStack.EMPTY);
+    private final DefaultedList<ItemStack> items = DefaultedList.ofSize(3, ItemStack.EMPTY);
 
     public JudgmentInventory(ItemStack stack) {
         this.stack = stack;

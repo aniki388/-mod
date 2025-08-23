@@ -1,26 +1,35 @@
 package com.chengcode.sgsmod.manager;
 
 import com.chengcode.sgsmod.card.Card;
-import com.chengcode.sgsmod.effect.ModEffects;
 import com.chengcode.sgsmod.entity.GeneralEntity;
 import com.chengcode.sgsmod.entity.ShaEntity;
+import com.chengcode.sgsmod.gui.TurnOrderScreen;
 import com.chengcode.sgsmod.item.CardStack;
+import com.chengcode.sgsmod.item.HandManagerItem;
 import com.chengcode.sgsmod.item.ModItems;
+import com.chengcode.sgsmod.network.NetWorking;
 import com.chengcode.sgsmod.skill.Skills;
 import com.chengcode.sgsmod.sound.ModSoundEvents;
 import com.chengcode.sgsmod.sound.SkillSoundManager;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.text.Text;
 import net.minecraft.entity.EntityPose;
+import net.minecraft.util.Hand;
+import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -33,6 +42,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+import static com.chengcode.sgsmod.manager.CardGameManager.ClientTurnManager.getClientTurnOrder;
 
 /**
  * CardGameManager
@@ -69,12 +83,18 @@ public class CardGameManager {
     /** 濒死玩家列表（通过UUID标记） */
     private static final ConcurrentHashMap<UUID, Integer> DYING_PLAYERS = new ConcurrentHashMap<>();
 
+    /** 玩家是否自动发牌到手牌区 */
+    private static final ConcurrentHashMap<UUID, Boolean> AUTO_DRAW_HAND = new ConcurrentHashMap<>();
+
     /** 缓存濒死玩家原始状态（解决移动限制恢复问题） */
     private static final ConcurrentHashMap<UUID, Boolean> ORIGINAL_FLYING = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<UUID, Float> ORIGINAL_SPEED = new ConcurrentHashMap<>();
 
     /** 牌堆对象 */
     private static final CardStack cardStack = new CardStack();
+
+    /** 坐次信息 */
+    private static  Map<Integer, LivingEntity> turnOrder = new ConcurrentHashMap<>();
 
     // ===============================
     // 新增：弃牌堆核心结构
@@ -92,6 +112,31 @@ public class CardGameManager {
 
     public static CardStack getCardStack() {
         return cardStack;
+    }
+
+    public static void turnOn(PlayerEntity player,boolean on) {
+        AUTO_DRAW_HAND.put(player.getUuid(),on);
+    }
+
+
+    /**
+     * 获取自动发牌状态（默认 false）
+     */
+    public static boolean getAutoHand(PlayerEntity player) {
+        return AUTO_DRAW_HAND.getOrDefault(player.getUuid(),false);
+    }
+
+    /**
+     * 切换自动发牌状态（返回新的状态）
+     */
+    public static boolean toggleAutoHand(PlayerEntity player) {
+        boolean newValue = !getAutoHand(player);
+        AUTO_DRAW_HAND.put(player.getUuid(), newValue);
+        return newValue;
+    }
+
+    public static void setAutoHand(PlayerEntity player, boolean on) {
+        AUTO_DRAW_HAND.put(player.getUuid(), on);
     }
 
     /** 测试模式下的卡牌池 */
@@ -191,35 +236,319 @@ public class CardGameManager {
     /**
      * 启动测试模式：初始化牌堆、分发初始牌，并定时摸牌
      */
-    public static void startTestMode(List<ServerPlayerEntity> players, List<GeneralEntity> generals, MinecraftServer server) {
+    public static void startMode(List<ServerPlayerEntity> players, List<GeneralEntity> generals, MinecraftServer server, String mode, PlayerEntity host) {
         LOGGER.info("进入测试模式：正在初始化牌堆与角色手牌...");
-        cardStack.reset("test");
+        cardStack.reset("mode");
         clearDiscardPile(); // 初始化时清空弃牌堆
 
         // 发放初始牌
         players.forEach(CardGameManager::initHand);
         generals.forEach(CardGameManager::initHand);
 
-        scheduler.scheduleAtFixedRate(() -> {
-            server.execute(() -> {  // 确保逻辑在主线程执行
-                players.forEach(p -> {
-                    int drawCnt = DrawCardMap.getOrDefault(p.getUuid(), 2);
-                    if (ShaEntity.hasSkill(p, Skills.yinzi)) {
-                        drawCnt += 1;
-                        SkillSoundManager.playSkillSound("yinzi", p);
+        switch ( mode) {
+            case "test":
+                scheduler.scheduleAtFixedRate(() -> {
+                    server.execute(() -> {  // 确保逻辑在主线程执行
+                        players.forEach(p -> {
+                            int drawCnt = DrawCardMap.getOrDefault(p.getUuid(), 2);
+                            if (ShaEntity.hasSkill(p, Skills.yinzi)) {
+                                drawCnt += 1;
+                                SkillSoundManager.playSkillSound("yinzi", p);
+                            }
+                            giveCard(p, drawCnt);
+                        });
+                        generals.forEach(g -> {
+                            int drawCnt = g.getDrawNum() <= 0 ? 2 : g.getDrawNum();
+                            if (ShaEntity.hasSkill(g, Skills.yinzi)) {
+                                drawCnt += 1;
+                                SkillSoundManager.playSkillSound("yinzi", g);
+                            }
+                            giveCard(g, drawCnt);
+                        });
+                    });
+                }, 0, 15, TimeUnit.SECONDS);
+                break;
+            default:
+                break;
+        }
+    }
+
+    public static void EndTurn(int lastTurn, LivingEntity livingEntity) {
+        String name;
+        if (livingEntity instanceof PlayerEntity  player) name = player.getEntityName();
+        else if (livingEntity instanceof GeneralEntity general) name = Objects.requireNonNullElse(general.getCustomName(), Text.literal("未命名")).getString();
+        else name =  "未知";
+        DisCardTurn(lastTurn, livingEntity, name);
+
+        say(name + "的回合结束", livingEntity.getWorld());
+    }
+
+    private static void DisCardTurn(int lastTurn, LivingEntity livingEntity, String name) {
+        // 实体有效性防护（避免空指针）
+        if (livingEntity == null || !livingEntity.isAlive() || livingEntity.getWorld() == null) {
+            LOGGER.error("DisCardTurn：轮次{}的实体无效（null/已死亡/无世界），跳过弃牌流程", lastTurn);
+            return;
+        }
+        World world = livingEntity.getWorld();
+        ScheduledExecutorService tempScheduler = Executors.newSingleThreadScheduledExecutor();
+
+        try {
+            say(name + "进入弃牌阶段", world);
+            livingEntity.sendMessage(Text.literal("请打开手牌工具进行弃牌，3秒后自动弃牌（手牌和背包中的卡牌均会被统计）"));
+
+            if (!(livingEntity instanceof PlayerEntity player)) {
+                LOGGER.debug("DisCardTurn：轮次{}的实体非玩家（{}），跳过弃牌", lastTurn, name);
+                return;
+            }
+
+            // 关键：将player赋值给final变量，供lambda使用
+            final PlayerEntity finalPlayer = player;
+            final World finalWorld = world;
+
+            // 统计手牌区（独立存储）+ 背包区所有卡牌
+            int currentHand = 0;
+            HandInventory hand = getPlayerHand(player);
+            boolean hasHandManager = hand != null;
+
+            // 1. 统计手牌区
+            if (hasHandManager) {
+                for (ItemStack s : hand.getItems()) {
+                    if (!s.isEmpty() && s.getItem() instanceof Card) {
+                        currentHand += s.getCount();
                     }
-                    giveCard(p, drawCnt);
-                });
-                generals.forEach(g -> {
-                    int drawCnt = g.getDrawNum() <= 0 ? 2 : g.getDrawNum();
-                    if (ShaEntity.hasSkill(g, Skills.yinzi)) {
-                        drawCnt += 1;
-                        SkillSoundManager.playSkillSound("yinzi", g);
+                }
+            } else {
+                boolean giveSuccess = player.getInventory().insertStack(ModItems.HANDMANAGER.getDefaultStack());
+                if (giveSuccess) {
+                    hand = getPlayerHand(player);
+                    hasHandManager = true;
+                    for (ItemStack s : hand.getItems()) {
+                        if (!s.isEmpty() && s.getItem() instanceof Card) {
+                            currentHand += s.getCount();
+                        }
                     }
-                    giveCard(g, drawCnt);
-                });
-            });
-        }, 0, 15, TimeUnit.SECONDS);
+                } else {
+                    player.sendMessage(Text.of("你的背包已满，无法获得手牌工具，将统计所有背包卡牌"), false);
+                }
+            }
+
+            // 2. 统计背包区（0-35槽位）
+            for (int i = 0; i < 36; i++) {
+                ItemStack stack = player.getInventory().getStack(i);
+                if (!stack.isEmpty() && stack.getItem() instanceof Card) {
+                    currentHand += stack.getCount();
+                }
+            }
+
+            // 计算需要弃牌的数量
+            int maxHand = getHandCapacity(player);
+            final int needDiscard = Math.max(0, currentHand - maxHand);
+            final boolean finalHasHandManager = hasHandManager;
+            final HandInventory finalHand = hand;
+
+            if (needDiscard > 0) {
+                tempScheduler.schedule(() -> {
+                    MinecraftServer server = finalWorld.getServer();
+                    if (server == null) {
+                        LOGGER.error("DisCardTurn：无法获取服务器实例，自动弃牌失败");
+                        return;
+                    }
+
+                    server.execute(() -> {
+                        // 修复：用实体所在世界是否为当前世界判断，替代不存在的contains()
+                        if (!finalPlayer.isAlive() || finalPlayer.getWorld() != finalWorld) {
+                            LOGGER.error("DisCardTurn：玩家{}已离线/死亡，终止自动弃牌", name);
+                            return;
+                        }
+
+                        int discardedCount = 0;
+                        DiscardInventory discardInventory = getPlayerDiscardInventory(finalPlayer);
+
+                        // 1. 优先从弃牌区弃牌
+                        if (discardInventory != null) {
+                            for (int i = 0; i < discardInventory.size() && discardedCount < needDiscard; i++) {
+                                ItemStack stack = discardInventory.getStack(i);
+                                if (stack.isEmpty()) continue;
+
+                                discard(stack);
+                                discardInventory.removeStack(i);
+                                discardInventory.markDirty();
+                                discardedCount++;
+                            }
+                        }
+
+                        // 2. 从手牌区和背包区弃牌
+                        if (discardedCount < needDiscard) {
+                            // 2.1 手牌区弃牌
+                            if (finalHasHandManager && finalHand != null) {
+                                for (int i = 0; i < finalHand.getItems().size() && discardedCount < needDiscard; i++) {
+                                    ItemStack stack = finalHand.getItems().get(i);
+                                    if (stack.isEmpty() || !(stack.getItem() instanceof Card)) continue;
+
+                                    int discardNum = Math.min(stack.getCount(), needDiscard - discardedCount);
+                                    for (int j = 0; j < discardNum; j++) {
+                                        ItemStack discardStack = stack.split(1);
+                                        finalHand.markDirty();
+                                        discard(discardStack);
+                                        discardedCount++;
+                                    }
+                                    if (stack.isEmpty()) {
+                                        finalHand.getItems().set(i, ItemStack.EMPTY);
+                                    }
+                                }
+                            }
+
+                            // 2.2 背包区弃牌
+                            if (discardedCount < needDiscard) {
+                                for (int i = 0; i < 36 && discardedCount < needDiscard; i++) {
+                                    ItemStack stack = finalPlayer.getInventory().getStack(i);
+                                    if (stack.isEmpty() || !(stack.getItem() instanceof Card)) {
+                                        continue;
+                                    }
+
+                                    int discardNum = Math.min(stack.getCount(), needDiscard - discardedCount);
+                                    for (int j = 0; j < discardNum; j++) {
+                                        ItemStack discardStack = stack.split(1);
+                                        discard(discardStack);
+                                        discardedCount++;
+                                    }
+                                }
+                            }
+                        }
+
+                        finalPlayer.sendMessage(Text.of("自动弃牌完成，共从手牌和背包中弃置" + discardedCount + "张牌"), false);
+                    });
+                }, 3, TimeUnit.SECONDS);
+            } else {
+                player.sendMessage(Text.of("你当前手牌和背包中的卡牌总数（" + currentHand + "张）未超过上限（" + maxHand + "张），无需弃牌！"), false);
+            }
+        } finally {
+            // 确保调度器关闭
+            tempScheduler.shutdown();
+            try {
+                if (!tempScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                    tempScheduler.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                tempScheduler.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+
+
+
+    private static DiscardInventory getPlayerDiscardInventory(PlayerEntity player) {
+        if (player instanceof ServerPlayerEntity) {
+            for (ItemStack stack : ((ServerPlayerEntity) player).getInventory().main) {
+                if (stack.getItem() instanceof HandManagerItem) {
+                    return new DiscardInventory(stack);
+                }
+            }
+        }
+        return null;
+    }
+
+    public static void StartTurn(int i, LivingEntity livingEntity) {
+        String name;
+        if (livingEntity instanceof PlayerEntity  player) name = player.getEntityName();
+        else if (livingEntity instanceof GeneralEntity general) name = Objects.requireNonNullElse(general.getCustomName(), Text.literal("未命名")).getString();
+        else name =  "未知";
+        say("第" + i + "轮开始，是" + livingEntity.getName().getString() + "的回合", livingEntity.getWorld());
+        scheduler.schedule(() -> {
+            PrepareTurn(i,livingEntity,name);
+        }, 2, TimeUnit.SECONDS);
+    }
+
+    private static void PrepareTurn(int i, LivingEntity livingEntity,String name) {
+        livingEntity.sendMessage(Text.of("准备阶段"));
+        scheduler.schedule(() -> {
+            JudgmentStage(i,livingEntity,name);
+        }, 2, TimeUnit.SECONDS);
+    }
+
+    private static void JudgmentStage(int i, LivingEntity livingEntity,String name) {
+        say(name + "的判定阶段", livingEntity.getWorld());
+        scheduler.schedule(() -> {
+            DrawingStage(i,livingEntity,name);
+        }, 2, TimeUnit.SECONDS);
+    }
+
+    private static void DrawingStage(int i, LivingEntity livingEntity,String name) {
+        say(name + "的摸牌阶段", livingEntity.getWorld());
+        int bones = 0;
+        if (ShaEntity.hasSkill(livingEntity, Skills.yinzi)) bones ++;
+        if (livingEntity instanceof PlayerEntity player) {
+            int drawCnt = DrawCardMap.getOrDefault(player.getUuid(), 2);
+            if (AUTO_DRAW_HAND.getOrDefault(player,true))
+            {
+                HandInventory hand = getPlayerHand( player);
+                if (hand != null) giveCardTohand(player, drawCnt +  bones, hand);
+                else {
+                    if(player.giveItemStack(ModItems.HANDMANAGER.getDefaultStack()))
+                    {
+                        hand = getPlayerHand( player);
+                        giveCardTohand(player, drawCnt +  bones, hand);
+                    }else {
+                        player.sendMessage(Text.of("你的背包满了，无法获得手牌！"), false);
+                    }
+                }
+            }else {
+                giveCard( player, drawCnt +  bones);
+            }
+        }
+        else if (livingEntity instanceof GeneralEntity general) {
+            int drawCnt = general.getDrawNum() <= 0 ? 2 : general.getDrawNum();
+            giveCard(general,drawCnt + bones);
+        }
+    }
+
+    private static void say(String msg,World world){
+        world.getPlayers().forEach(p ->
+                p.sendMessage(Text.of( "系统：" + msg), false));
+    }
+
+    public static HandInventory getPlayerHand(PlayerEntity player) {
+        PlayerInventory inventory = player.getInventory();
+
+        // 遍历玩家所有物品栏和背包
+        for (int i = 0; i < inventory.size(); i++) {
+            ItemStack stack = inventory.getStack(i);
+            if (stack.getItem() instanceof HandManagerItem) {
+                return new HandInventory(stack);
+            }
+        }
+
+        // 尝试再从主手/副手获取（可选，保险起见）
+        ItemStack mainHand = player.getStackInHand(Hand.MAIN_HAND);
+        if (mainHand.getItem() instanceof HandManagerItem) {
+            return new HandInventory(mainHand);
+        }
+        ItemStack offHand = player.getStackInHand(Hand.OFF_HAND);
+        if (offHand.getItem() instanceof HandManagerItem) {
+            return new HandInventory(offHand);
+        }
+
+        return null; // 玩家没有手牌区
+    }
+
+    /**
+     * 安全读取玩家 hand 某个 slot 的 ItemStack（如果 slot 无效或 HandInventory 不存在返回 ItemStack.EMPTY）
+     * slot index 按你的 HandInventory 约定（0..N-1）
+     */
+    public static ItemStack getSlotItem(PlayerEntity player, int slotIndex) {
+        Optional<HandInventory> maybe = Optional.ofNullable(getPlayerHand(player));
+        if (maybe.isEmpty()) return ItemStack.EMPTY;
+        HandInventory hi = maybe.get();
+        // 假设 ImplementedInventory 风格：hi.getItems() 返回 DefaultedList<ItemStack>
+        try {
+            DefaultedList<ItemStack> items = hi.getItems();
+            if (slotIndex < 0 || slotIndex >= items.size()) return ItemStack.EMPTY;
+            return items.get(slotIndex);
+        } catch (Exception e) {
+            return ItemStack.EMPTY;
+        }
     }
 
     /** 初始化玩家手牌（清空 → 发4张牌） */
@@ -329,6 +658,55 @@ public class CardGameManager {
         }
     }
 
+    /** 给玩家发指定数量的牌 */
+    public static void giveCardTohand(PlayerEntity player, int drawcnt,HandInventory hand) {
+        if (drawcnt <= 0) return;
+
+        List<Item> drawnCards = new ArrayList<>(drawcnt);
+
+        // 先从牌堆获取所有需要的牌（新增：牌堆为空时从弃牌堆重洗）
+        for (int i = 0; i < drawcnt; i++) {
+            Item cardItem = cardStack.draw();
+            if (cardItem == null) {
+                // 牌堆为空，尝试从弃牌堆重洗
+                int reshuffled = reshuffleFromDiscardPile();
+                if (reshuffled == 0) { // 弃牌堆也为空
+                    player.sendMessage(Text.of("牌堆与弃牌堆均为空，无法摸牌"), false);
+                    return;
+                }
+                // 重洗后再次尝试抽牌
+                cardItem = cardStack.draw();
+                if (cardItem == null) {
+                    player.sendMessage(Text.of("重洗后仍然无法获得牌"), false);
+                    return;
+                }
+            }
+            drawnCards.add(cardItem);
+        }
+
+        // 批量添加卡牌并发送合并消息
+        List<String> cardNames = new ArrayList<>();
+        boolean success = true;
+
+        for (Item cardItem : drawnCards) {
+            ItemStack newCardStack = new ItemStack(cardItem);
+            if (!hand.addItem(newCardStack)) {
+                player.sendMessage(Text.of("你的手牌区满了，无法获得所有牌"), false);
+                success = false;
+                break;
+            }
+            if (cardItem instanceof Card card) {
+                cardNames.add(Text.translatable("item.sgsmod.card." + card.getBaseId()).getString());
+            }
+        }
+
+        // 发送合并消息，减少网络传输
+        if (success && !cardNames.isEmpty()) {
+            String message = "摸到：" + String.join("、", cardNames);
+            player.sendMessage(Text.of(message), false);
+        }
+    }
+
 
     /** 给武将发指定数量的牌（兼容弃牌堆） */
     public static void giveCard(GeneralEntity general, int drawcnt) {
@@ -385,6 +763,7 @@ public class CardGameManager {
         }
 
         // 清空所有游戏数据（含濒死状态缓存）
+        turnOrder.clear();
         DYING_PLAYERS.clear();
         DrawCardMap.clear();
         HAND_CARD_SLOTS_CACHE.clear();
@@ -930,6 +1309,25 @@ public class CardGameManager {
         updateHandCardCache(player);
     }
 
+    // 获得轮次Map
+    public static void GetTurnOrder(Map<Integer, LivingEntity> turns) {
+        turnOrder = turns;
+    }
+
+    public static Map<Integer, LivingEntity> getTurnOrder() {
+        return turnOrder;
+    }
+
+    public static int getHandCapacity(PlayerEntity player) {
+        if (ShaEntity.hasSkill(player, Skills.yinzi)) {
+            float maxHealth = player.getMaxHealth();
+            return maxHealth > 0 ? (int) (maxHealth / 4) : 1; // 避免除零，默认返回1
+        } else {
+            float health = player.getHealth();
+            return health > 0 ? (int) (health / 4) : 1; // 避免除零，默认返回1
+        }
+    }
+
     // 辅助类：存储被盖的物品和原槽位
     static class CoveredItems {
         List<ItemStack> items;
@@ -969,5 +1367,19 @@ public class CardGameManager {
         }
 
         updateHandCardCache(serverPlayer);
+    }
+    public static class ClientTurnManager {  // 改为 static
+        private static final Map<Integer, LivingEntity> clientTurnOrder = new ConcurrentHashMap<>();
+
+        // 更新客户端轮次数据（静态方法）
+        public static void updateTurnOrder(Map<Integer, LivingEntity> newTurns) {
+            clientTurnOrder.clear();
+            clientTurnOrder.putAll(newTurns);
+        }
+
+        // 获取客户端轮次数据（静态方法）
+        public static Map<Integer, LivingEntity> getClientTurnOrder() {
+            return clientTurnOrder;
+        }
     }
 }

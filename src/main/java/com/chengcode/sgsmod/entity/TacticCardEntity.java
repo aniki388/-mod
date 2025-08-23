@@ -126,8 +126,8 @@ public abstract class TacticCardEntity extends ThrownItemEntity {
         );
 
         // 获取玩家实体
-        List<ServerPlayerEntity> players = player.getWorld().getEntitiesByType(
-                TypeFilter.instanceOf(ServerPlayerEntity.class),
+        List<PlayerEntity> players = player.getWorld().getEntitiesByType(
+                TypeFilter.instanceOf(PlayerEntity.class),
                 box,
                 entity -> entity != player
         );

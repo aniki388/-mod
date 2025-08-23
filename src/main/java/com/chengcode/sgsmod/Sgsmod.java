@@ -1,5 +1,6 @@
 package com.chengcode.sgsmod;
 
+import com.chengcode.sgsmod.card.Card;
 import com.chengcode.sgsmod.command.ModCommands;
 import com.chengcode.sgsmod.effect.ModEffects;
 import com.chengcode.sgsmod.entity.ModEntities;
@@ -16,9 +17,14 @@ import com.chengcode.sgsmod.sound.SkillSoundManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.SpawnReason;
+import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -29,13 +35,13 @@ import net.minecraft.world.World;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.*;
+
 import static com.chengcode.sgsmod.skill.ModSkills.loadPlayerSkills;
 import static com.chengcode.sgsmod.skill.ModSkills.savePlayerSkills;
 
 public class Sgsmod implements ModInitializer {
 	public static final String MOD_ID = "sgsmod";
-
-
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	// 实体名称常量（避免硬编码，提高可维护性）
@@ -65,7 +71,6 @@ public class Sgsmod implements ModInitializer {
 
 		// 3. 注册服务器端网络接收器（处理客户端发来的数据包）
 		registerServerNetworkHandlers();
-
 		LOGGER.info("【三国杀Mod】初始化完成！");
 	}
 

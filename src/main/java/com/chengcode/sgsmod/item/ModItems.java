@@ -2,11 +2,9 @@ package com.chengcode.sgsmod.item;
 
 import com.chengcode.sgsmod.Sgsmod;
 import com.chengcode.sgsmod.card.*;
-import com.chengcode.sgsmod.manager.HandInventory;
 import com.chengcode.sgsmod.manager.HandManagementScreenHandler;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
 import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry;
-import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;

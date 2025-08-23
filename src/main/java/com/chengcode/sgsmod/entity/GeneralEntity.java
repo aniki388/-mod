@@ -100,6 +100,7 @@ public class GeneralEntity extends PathAwareEntity {
     public GeneralEntity(EntityType<? extends PathAwareEntity> entityType, World world) {
         super(entityType, world);
         initGoals();
+        setPersistent();
     }
 
     @Override
